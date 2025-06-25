@@ -7,7 +7,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { ShareLink } from '@/lib/sharing'
 import { MediaGallery } from '@/components/ui/MediaUpload'
-import { User } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js'
 
 interface Car {
   id: string
@@ -39,12 +39,17 @@ export default function SharedChecklistView({ car, shareLink, checklistItems }: 
 
   useEffect(() => {
     async function checkUser() {
-      const currentUser = await getCurrentUser()
-      setUser(currentUser)
-      
-      // If edit permission required but no user, redirect to sign in
-      if (shareLink.permission_type === 'edit' && !currentUser) {
-        router.push(`/auth/signin?redirect=/shared/${shareLink.share_token}`)
+      try {
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+        
+        // If edit permission required but no user, redirect to sign in
+        if (shareLink.permission_type === 'edit' && !currentUser) {
+          router.push(`/auth/signin?redirect=/shared/${shareLink.share_token}`)
+        }
+      } catch (error) {
+        console.error('Error checking user:', error)
+        setUser(null)
       }
     }
     
