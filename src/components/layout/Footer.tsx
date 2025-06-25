@@ -2,25 +2,82 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { supabase } from '@/lib/supabase'
+import { getCurrentUser } from '@/lib/auth'
 
 export default function Footer() {
   const t = useTranslations()
   const [feedback, setFeedback] = useState('')
   const [email, setEmail] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false)
+  const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    setIsSubmittingFeedback(true)
+    setFeedbackStatus('idle')
     
-    // Here you would typically send the feedback to your backend
-    // For now, we'll just simulate a submission
-    setTimeout(() => {
-      alert('Kiitos palautteesta!')
-      setFeedback('')
-      setEmail('')
-      setIsSubmitting(false)
-    }, 1000)
+    try {
+      const user = await getCurrentUser()
+      
+      const { error } = await supabase
+        .from('feedback')
+        .insert({
+          message: feedback.trim(),
+          user_id: user?.id || null,
+          user_email: user?.email || null
+        })
+
+      if (error) {
+        console.error('Error submitting feedback:', error)
+        setFeedbackStatus('error')
+      } else {
+        setFeedbackStatus('success')
+        setFeedback('')
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error)
+      setFeedbackStatus('error')
+    } finally {
+      setIsSubmittingFeedback(false)
+    }
+  }
+
+  const handleEmailSignup = async () => {
+    if (!email.trim()) return
+    
+    setIsSubmittingEmail(true)
+    setEmailStatus('idle')
+    
+    try {
+      const user = await getCurrentUser()
+      
+      const { error } = await supabase
+        .from('email_signups')
+        .insert({
+          email: email.trim().toLowerCase(),
+          user_id: user?.id || null
+        })
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          setEmailStatus('error')
+        } else {
+          console.error('Error signing up for email:', error)
+          setEmailStatus('error')
+        }
+      } else {
+        setEmailStatus('success')
+        setEmail('')
+      }
+    } catch (error) {
+      console.error('Error signing up for email:', error)
+      setEmailStatus('error')
+    } finally {
+      setIsSubmittingEmail(false)
+    }
   }
 
   return (
@@ -54,12 +111,24 @@ export default function Footer() {
                 required
               />
               
+              {feedbackStatus === 'success' && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm">
+                  Kiitos palautteesta! Se auttaa meitä parantamaan palvelua.
+                </div>
+              )}
+              
+              {feedbackStatus === 'error' && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+                  Palautteen lähettäminen epäonnistui. Yritä uudelleen.
+                </div>
+              )}
+              
               <button
                 type="submit"
-                disabled={isSubmitting || !feedback.trim()}
+                disabled={isSubmittingFeedback || !feedback.trim()}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
               >
-                {isSubmitting ? 'Lähetetään...' : 'Lähetä palaute'}
+                {isSubmittingFeedback ? 'Lähetetään...' : 'Lähetä palaute'}
               </button>
             </form>
           </div>
@@ -93,18 +162,25 @@ export default function Footer() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
               
+              {emailStatus === 'success' && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm">
+                  Kiitos! Sinut on lisätty sähköpostilistalle.
+                </div>
+              )}
+              
+              {emailStatus === 'error' && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+                  Sähköposti on jo listalla tai tapahtui virhe. Yritä uudelleen.
+                </div>
+              )}
+              
               <button
                 type="button"
-                onClick={() => {
-                  if (email) {
-                    alert('Kiitos! Sinut on lisätty sähköpostilistalle.')
-                    setEmail('')
-                  }
-                }}
-                disabled={!email.trim()}
+                onClick={handleEmailSignup}
+                disabled={!email.trim() || isSubmittingEmail}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
               >
-                Liity sähköpostilistalle
+                {isSubmittingEmail ? 'Lisätään...' : 'Liity sähköpostilistalle'}
               </button>
             </div>
           </div>

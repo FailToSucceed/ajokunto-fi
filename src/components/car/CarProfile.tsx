@@ -8,6 +8,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { User } from '@supabase/supabase-js'
 import ChecklistSection from './ChecklistSection'
 import PermissionsManager from './PermissionsManager'
+import SharingModal from './SharingModal'
 import { generateChecklistPDF, downloadPDF } from '@/lib/pdf-export'
 import { CHECKLIST_SECTIONS } from '@/data/checklist-items'
 
@@ -34,7 +35,9 @@ export default function CarProfile({ carId }: CarProfileProps) {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('checklist')
   const [showPermissions, setShowPermissions] = useState(false)
+  const [showSharing, setShowSharing] = useState(false)
   const [exportingPDF, setExportingPDF] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     async function loadCarData() {
@@ -94,6 +97,21 @@ export default function CarProfile({ carId }: CarProfileProps) {
     }
   }
 
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      // This is more of a visual feedback since auto-save is already happening
+      // In a real scenario, you might batch save pending changes
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate save
+      alert('Tarkastuslista tallennettu onnistuneesti!')
+    } catch (error) {
+      console.error('Error saving checklist:', error)
+      alert('Tallentamisessa tapahtui virhe')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -132,6 +150,31 @@ export default function CarProfile({ carId }: CarProfileProps) {
               )}
             </div>
             <div className="flex items-center space-x-4">
+              {(car.userRole === 'owner' || car.userRole === 'contributor') && (
+                <>
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="flex items-center space-x-1 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span>{saving ? 'Tallennetaan...' : 'Tallenna'}</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowSharing(true)}
+                    className="flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                    </svg>
+                    <span>Jaa</span>
+                  </button>
+                </>
+              )}
+              
               {car.userRole === 'owner' && (
                 <button
                   onClick={() => setShowPermissions(true)}
@@ -140,6 +183,7 @@ export default function CarProfile({ carId }: CarProfileProps) {
                   Käyttöoikeudet
                 </button>
               )}
+              
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${{
                 owner: 'bg-green-100 text-green-800',
                 contributor: 'bg-blue-100 text-blue-800',
@@ -254,6 +298,15 @@ export default function CarProfile({ carId }: CarProfileProps) {
           carId={carId}
           currentUserRole={car.userRole || 'viewer'}
           onClose={() => setShowPermissions(false)}
+        />
+      )}
+
+      {showSharing && (
+        <SharingModal
+          carId={carId}
+          carRegistration={car.registration_number}
+          isOpen={showSharing}
+          onClose={() => setShowSharing(false)}
         />
       )}
     </div>

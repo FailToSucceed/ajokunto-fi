@@ -224,28 +224,40 @@ export default function ChecklistSection({
                       )}
                       
                       {canEdit && !isEditing ? (
-                        <div className="flex items-center space-x-2">
-                          {['ok', 'warning', 'issue'].map((status) => (
-                            <button
-                              key={status}
-                              onClick={() => updateChecklistItem(item.key, status as any, itemData?.comment)}
-                              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                                itemData?.status === status
-                                  ? getStatusColor(status)
-                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                              }`}
-                            >
-                              {t(`checklist.status.${status}`)}
-                            </button>
-                          ))}
-                          {itemData?.status && (
-                            <button
-                              onClick={() => updateChecklistItem(item.key, null)}
-                              className="px-3 py-1 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
-                            >
-                              Tyhjennä
-                            </button>
-                          )}
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-2">
+                            {['ok', 'warning', 'issue'].map((status) => (
+                              <button
+                                key={status}
+                                onClick={() => updateChecklistItem(item.key, status as any, itemData?.comment)}
+                                className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                                  itemData?.status === status
+                                    ? getStatusColor(status)
+                                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                }`}
+                              >
+                                {t(`checklist.status.${status}`)}
+                              </button>
+                            ))}
+                            {itemData?.status && (
+                              <button
+                                onClick={() => updateChecklistItem(item.key, null)}
+                                className="px-3 py-1 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
+                              >
+                                Tyhjennä
+                              </button>
+                            )}
+                          </div>
+                          
+                          <button
+                            onClick={() => setEditingItem(item.key)}
+                            className="flex items-center space-x-2 px-3 py-1 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                            </svg>
+                            <span>Kommentoi tai lataa tiedosto</span>
+                          </button>
                         </div>
                       ) : itemData?.status ? (
                         <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(itemData.status)}`}>
@@ -267,20 +279,12 @@ export default function ChecklistSection({
                         canDelete={canEdit}
                       />
                     </div>
-
-                    {canEdit && (
-                      <button
-                        onClick={() => setEditingItem(isEditing ? null : item.key)}
-                        className="ml-2 text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        {isEditing ? 'Peruuta' : 'Kommentoi'}
-                      </button>
-                    )}
                   </div>
 
                   {isEditing && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <CommentForm
+                        carId={carId}
                         itemKey={item.key}
                         currentComment={itemData?.comment || ''}
                         currentStatus={itemData?.status || null}
@@ -303,6 +307,7 @@ export default function ChecklistSection({
 }
 
 interface CommentFormProps {
+  carId: string
   itemKey: string
   currentComment: string
   currentStatus: 'ok' | 'warning' | 'issue' | null
@@ -310,7 +315,7 @@ interface CommentFormProps {
   onCancel: () => void
 }
 
-function CommentForm({ currentComment, currentStatus, onSave, onCancel }: CommentFormProps) {
+function CommentForm({ carId, currentComment, currentStatus, onSave, onCancel }: CommentFormProps) {
   const t = useTranslations()
   const [comment, setComment] = useState(currentComment)
   const [status, setStatus] = useState<'ok' | 'warning' | 'issue' | null>(currentStatus)
@@ -376,8 +381,7 @@ function CommentForm({ currentComment, currentStatus, onSave, onCancel }: Commen
           Lisää media
         </label>
         <MediaUpload
-          carId={currentComment ? 'temp' : 'temp'} // This would be passed from parent
-          checklistItemId={currentComment ? 'temp' : undefined}
+          carId={carId}
           onUploadComplete={() => {
             // Refresh media gallery
           }}
