@@ -47,14 +47,8 @@ export default function HomePage() {
         // Show results (for now, just go to first result)
         router.push(`/car/${cars[0].id}`)
       } else {
-        // No cars found, suggest creating profile
-        const confirmCreate = confirm(
-          `Autoa rekisterinumerolla "${searchQuery.trim()}" ei löytynyt.\n\nHaluatko luoda profiili tälle autolle?`
-        )
-        
-        if (confirmCreate) {
-          router.push(`/auth/signup?newCar=${encodeURIComponent(searchQuery.trim())}`)
-        }
+        // No cars found, show error message with create profile option
+        setSearchError(`Tietokannastamme ei löydy autoa hakemallasi rekisterinumerolla "${searchQuery.trim()}".`)
       }
     } catch (error) {
       console.error('Search error:', error)
@@ -96,8 +90,16 @@ export default function HomePage() {
               </h3>
               
               {searchError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
-                  {searchError}
+                <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-lg mb-4 text-sm">
+                  <p className="mb-3">{searchError}</p>
+                  {searchError.includes('ei löydy autoa') && (
+                    <button
+                      onClick={() => router.push(`/auth/signup?newCar=${encodeURIComponent(searchQuery.trim())}`)}
+                      className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                    >
+                      Luo profiili
+                    </button>
+                  )}
                 </div>
               )}
               
@@ -120,9 +122,6 @@ export default function HomePage() {
                 </button>
               </form>
               
-              <p className="text-xs text-gray-500 mt-3 text-center">
-                Jos autoa ei löydy, ehdotamme auton profiilin luomista
-              </p>
             </div>
           </div>
           

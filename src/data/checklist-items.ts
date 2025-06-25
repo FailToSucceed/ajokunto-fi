@@ -13,6 +13,106 @@ export interface ChecklistSection {
 
 export const CHECKLIST_SECTIONS: ChecklistSection[] = [
   {
+    key: 'photo_documentation',
+    title: 'Valokuvadokumentaatio',
+    icon: '📸',
+    items: [
+      // Ulkoiset perusnäkymät (8 kuvaa)
+      {
+        key: 'exterior_front_left',
+        title: 'Etukulma vasemmalta',
+        description: 'Keula ja kylki näkyvissä samassa kuvassa'
+      },
+      {
+        key: 'exterior_front_right', 
+        title: 'Etukulma oikealta',
+        description: 'Keula ja kylki näkyvissä samassa kuvassa'
+      },
+      {
+        key: 'exterior_front_straight',
+        title: 'Suoraan edestä',
+        description: 'Koko edestä näkyvä osa autosta'
+      },
+      {
+        key: 'exterior_rear_straight',
+        title: 'Suoraan takaa',
+        description: 'Koko takaa näkyvä osa autosta'
+      },
+      {
+        key: 'exterior_side_left',
+        title: 'Sivukuva vasemmalta',
+        description: 'Koko auton sivuprofiili vasemmalta'
+      },
+      {
+        key: 'exterior_side_right',
+        title: 'Sivukuva oikealta', 
+        description: 'Koko auton sivuprofiili oikealta'
+      },
+      {
+        key: 'exterior_roof_top',
+        title: 'Katto ylhäältä',
+        description: 'Katto suoraan ylhäältä tai mahdollisimman ylhäältä'
+      },
+      {
+        key: 'exterior_engine_bay',
+        title: 'Moottoritila',
+        description: 'Konepelti auki - moottoritilan yleiskuva'
+      },
+      // Sisäkuvat (6 kuvaa)
+      {
+        key: 'interior_dashboard',
+        title: 'Kojelauta ja ohjauspyörä',
+        description: 'Kojelauta ja ohjauspyörä edestä kuvattuna'
+      },
+      {
+        key: 'interior_instrument_cluster',
+        title: 'Mittaristo',
+        description: 'Mittaristo sytytys päällä, moottori ei käynnissä'
+      },
+      {
+        key: 'interior_front_seats',
+        title: 'Etupenkit ja keskikonsoli',
+        description: 'Etupenkit ja keskikonsoli näkyvissä'
+      },
+      {
+        key: 'interior_rear_seats',
+        title: 'Takapenkki',
+        description: 'Takapenkin koko näkymä'
+      },
+      {
+        key: 'interior_trunk',
+        title: 'Tavaratila',
+        description: 'Tavaratila auki ja tyhjä'
+      },
+      {
+        key: 'interior_vin_code',
+        title: 'VIN-koodi',
+        description: 'VIN-koodi näkyvissä (tuulilasin alakulma tai oviaukko)'
+      },
+      // Lisäkuvat tarpeen mukaan
+      {
+        key: 'additional_tires',
+        title: 'Renkaat',
+        description: 'Yksi lähikuva kulutuspinnasta per rengas'
+      },
+      {
+        key: 'additional_damages',
+        title: 'Vauriot ja kulumat',
+        description: 'Kaikki mahdolliset vauriot ja kulumat dokumentoitu'
+      },
+      {
+        key: 'additional_keys_documents',
+        title: 'Avaimet ja asiakirjat',
+        description: 'Kaikki avaimet ja huoltokirja/asiakirjat'
+      },
+      {
+        key: 'additional_equipment',
+        title: 'Lisävarusteet',
+        description: 'Mahdolliset lisävarusteet (esim. vetokoukku, peruutuskamera)'
+      }
+    ]
+  },
+  {
     key: 'documentation',
     title: 'Dokumentaatio',
     icon: '📄',

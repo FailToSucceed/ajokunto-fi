@@ -17,6 +17,7 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
   const [loading, setLoading] = useState(false)
   const [creating, setCreating] = useState(false)
   const [qrCodes, setQrCodes] = useState<{[key: string]: string}>({})
+  const [copySuccess, setCopySuccess] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -65,10 +66,24 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
     }
   }
 
-  const handleCopyLink = (shareToken: string) => {
+  const handleCopyLink = async (shareToken: string) => {
     const url = generateShareUrl(shareToken)
-    navigator.clipboard.writeText(url)
-    // You could show a toast notification here
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopySuccess(shareToken)
+      setTimeout(() => setCopySuccess(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy link:', error)
+      // Fallback: select the text
+      const textArea = document.createElement('textarea')
+      textArea.value = url
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopySuccess(shareToken)
+      setTimeout(() => setCopySuccess(null), 2000)
+    }
   }
 
   const handleGenerateQR = async (shareId: string, shareToken: string) => {
@@ -165,6 +180,26 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
                         )}
                       </div>
 
+                      {/* Visible share URL */}
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-gray-500 mb-1">Jakolinkki:</p>
+                            <p className="text-sm text-gray-800 font-mono break-all">
+                              {generateShareUrl(link.share_token)}
+                            </p>
+                          </div>
+                          {copySuccess === link.share_token && (
+                            <div className="ml-2 flex items-center bg-green-100 text-green-800 px-2 py-1 rounded-lg text-xs font-medium">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Linkki kopioitu!
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => handleCopyLink(link.share_token)}
@@ -173,7 +208,7 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
-                          <span>Kopioi linkki</span>
+                          <span>{copySuccess === link.share_token ? 'Kopioitu!' : 'Kopioi linkki'}</span>
                         </button>
                         
                         <button

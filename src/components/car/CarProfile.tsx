@@ -167,6 +167,58 @@ export default function CarProfile({ carId }: CarProfileProps) {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 sm:px-0">
+          {/* Car Basic Info */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Auton perustiedot</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Rekisterinumero</label>
+                  <div className="mt-1 text-lg font-mono font-semibold text-gray-900">
+                    {car.registration_number}
+                  </div>
+                </div>
+                {car.make && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Merkki</label>
+                    <div className="mt-1 text-gray-900">{car.make}</div>
+                  </div>
+                )}
+                {car.model && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Malli</label>
+                    <div className="mt-1 text-gray-900">{car.model}</div>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-3">
+                {car.year && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Vuosimalli</label>
+                    <div className="mt-1 text-gray-900">{car.year}</div>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Luotu</label>
+                  <div className="mt-1 text-gray-900">
+                    {new Date(car.created_at).toLocaleDateString('fi-FI')}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Käyttöoikeus</label>
+                  <span className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-medium ${
+                    car.userRole === 'owner' ? 'bg-green-100 text-green-800' :
+                    car.userRole === 'contributor' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {car.userRole === 'owner' ? 'Omistaja' :
+                     car.userRole === 'contributor' ? 'Muokkaaja' : 'Katselija'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Tabs */}
           <div className="border-b border-gray-200 mb-6">
             <nav className="-mb-px flex space-x-8">
@@ -253,7 +305,7 @@ export default function CarProfile({ carId }: CarProfileProps) {
                     key={section.key}
                     carId={carId}
                     section={section.key}
-                    title={t(`checklist.${section.key}`)}
+                    title={section.title}
                     icon={section.icon}
                     canEdit={car.userRole !== 'viewer'}
                     onSave={handleSave}
