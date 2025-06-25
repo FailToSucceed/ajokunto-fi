@@ -18,12 +18,12 @@ export default function HomePage() {
               Ajokunto.fi
             </h1>
             <p className="text-lg text-gray-600 mb-2 max-w-2xl mx-auto">
-              Auton ostaja, myyjä tai käyttäjä – vahvista alta ohjeistukselle. Tarkista auton kunto 
-              helposti ja luotua kuluttajat asioista. Valitä kallit yllätykset ja sästä rahaa.
+              Auton ostaja, myyjä tai käyttäjä – vaihda alta ohituskaistalle! Tarkista auton kunto 
+              helposti ja huolla kulkupeli ajoissa. Vältä kalliit yllätykset ja säästä rahaa.
             </p>
             <p className="text-sm text-gray-500 max-w-2xl mx-auto">
-              Tämä on ensimmäinen pilottiversio. Arvostavamme souroa kaikkas palvelutte, jotta saamme kehitettyä 
-              tuotteita mahtimaattamman hyödyksenne, kiitos kun katsoit!
+              Tämä on ensimmäinen pilottiversio. Arvostavamme suuresti kaikkea palautetta, jotta saamme kehitettyä 
+              sovellusta mahdollisimman hyödylliseksi, kiitos kun testaat!
             </p>
           </div>
           
@@ -39,18 +39,18 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Auton Ostajalle</h3>
               <p className="text-gray-600 text-sm mb-6">
-                Valitä kallit virheet tarkastamaila auto ennen 
-                ostopäätöstä ja varmistamaan.
+                Vältä kalliit virheet tarkastamalla auto ennen 
+                ostopäätöstä ja varmistamalla.
               </p>
               <ul className="text-left text-sm text-gray-600 space-y-2 mb-6">
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">▶</span>
                   Saat tarkastuslistan juuri sinua 
-                  kiinnostavista autosta
+                  kiinnostavasta autosta
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">▶</span>
-                  Vältä kalmat ja salalit yllätykset
+                  Vältä kalliit ja salaiset yllätykset
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">▶</span>
@@ -100,8 +100,8 @@ export default function HomePage() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Auton Käyttäjälle</h3>
               <p className="text-gray-600 text-sm mb-6">
-                Pidä autosi kunnossa ja sästä 
-                ennakoivammassa ylläpidossa.
+                Pidä autosi kunnossa ja säästä 
+                ennakoivassa ylläpidossa.
               </p>
               <ul className="text-left text-sm text-gray-600 space-y-2 mb-6">
                 <li className="flex items-start">
@@ -111,8 +111,8 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-600 mr-2">▶</span>
-                  Seurata rajaa kaikossituksissa ja 
-                  optimoiduilla huoltokausilla
+                  Seuraat rajaa kaikissa tilanteissa ja 
+                  optimoiduilla huoltoväleillä
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-600 mr-2">▶</span>
