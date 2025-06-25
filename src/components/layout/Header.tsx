@@ -32,7 +32,7 @@ export default function Header() {
     <header className="bg-white border-b border-gray-200">
       {/* EMERGENCY DEBUG - SHOULD BE VISIBLE */}
       <div className="bg-red-500 text-white text-lg text-center py-4 font-black border-4 border-yellow-400" style={{zIndex: 9999}}>
-        🔴 UUSI VERSIO KÄYTÖSSÄ v3.0
+        🔴 UUSI VERSIO KÄYTÖSSÄ v3.0 (Build: 89e529c)
       </div>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
