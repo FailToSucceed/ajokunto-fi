@@ -32,9 +32,7 @@ export default function Header() {
     <header className="bg-white border-b border-gray-200">
       {/* EMERGENCY DEBUG - SHOULD BE VISIBLE */}
       <div className="bg-red-500 text-white text-lg text-center py-4 font-black border-4 border-yellow-400" style={{zIndex: 9999}}>
-        🚨 VERSIO 4.0 - DEPLOY TIME: {new Date().toISOString()} 🚨
-        <br />
-        User: {loading ? 'Loading...' : (user ? user.email : 'Not logged in')}
+        🔴 UUSI VERSIO KÄYTÖSSÄ v3.0
       </div>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
