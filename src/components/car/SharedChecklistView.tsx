@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { ShareLink } from '@/lib/sharing'
 import { MediaGallery } from '@/components/ui/MediaUpload'
+import { User } from '@supabase/supabase-js'
 
 interface Car {
   id: string
@@ -32,7 +33,7 @@ interface SharedChecklistViewProps {
 
 export default function SharedChecklistView({ car, shareLink, checklistItems }: SharedChecklistViewProps) {
   const router = useRouter()
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [items, setItems] = useState<ChecklistItem[]>(checklistItems)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
 
@@ -85,7 +86,7 @@ export default function SharedChecklistView({ car, shareLink, checklistItems }: 
     status: 'ok' | 'warning' | 'issue' | null,
     comment?: string
   ) => {
-    if (!canEdit) return
+    if (!canEdit || !user) return
 
     try {
       const existingItem = items.find(item => item.item_key === itemKey && item.section === section)
