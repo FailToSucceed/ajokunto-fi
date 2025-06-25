@@ -28,13 +28,27 @@ export async function createShareLink(
   expiresInDays?: number
 ): Promise<ShareLink | null> {
   try {
+    console.log('Creating share link for car:', carId, 'type:', permissionType)
     const user = await getCurrentUser()
-    if (!user) throw new Error('User not authenticated')
+    if (!user) {
+      console.error('User not authenticated')
+      throw new Error('User not authenticated')
+    }
+
+    console.log('User authenticated:', user.id)
 
     const shareToken = generateShareToken()
     const expiresAt = expiresInDays 
       ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
       : null
+
+    console.log('Inserting share link:', {
+      car_id: carId,
+      share_token: shareToken,
+      permission_type: permissionType,
+      expires_at: expiresAt,
+      created_by: user.id
+    })
 
     const { data, error } = await supabase
       .from('shared_checklists')
@@ -49,10 +63,11 @@ export async function createShareLink(
       .single()
 
     if (error) {
-      console.error('Error creating share link:', error)
+      console.error('Supabase error creating share link:', error)
       return null
     }
 
+    console.log('Share link created successfully:', data)
     return data
   } catch (error) {
     console.error('Error creating share link:', error)

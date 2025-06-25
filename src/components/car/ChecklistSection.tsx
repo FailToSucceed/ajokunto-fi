@@ -22,6 +22,13 @@ interface ChecklistSectionProps {
   title: string
   icon: string
   canEdit: boolean
+  onSave?: () => void
+  onShare?: () => void
+  onPermissions?: () => void
+  onExportPDF?: () => void
+  saving?: boolean
+  exportingPDF?: boolean
+  userRole?: 'owner' | 'contributor' | 'viewer'
 }
 
 
@@ -30,7 +37,14 @@ export default function ChecklistSection({
   section,
   title,
   icon,
-  canEdit
+  canEdit,
+  onSave,
+  onShare,
+  onPermissions,
+  onExportPDF,
+  saving = false,
+  exportingPDF = false,
+  userRole = 'viewer'
 }: ChecklistSectionProps) {
   const t = useTranslations()
   const [items, setItems] = useState<ChecklistItem[]>([])
@@ -300,6 +314,65 @@ export default function ChecklistSection({
               )
             })}
           </div>
+          
+          {/* Section action buttons */}
+          {canEdit && expanded && (onSave || onShare || onPermissions || onExportPDF) && (
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="flex justify-center">
+                <div className="flex items-center space-x-2 bg-gray-50 rounded-lg p-3">
+                  {onSave && (
+                    <button
+                      onClick={onSave}
+                      disabled={saving}
+                      className="flex items-center space-x-1 px-2 py-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs font-medium rounded transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <span>{saving ? 'Tallennetaan...' : 'Tallenna'}</span>
+                    </button>
+                  )}
+                  
+                  {onShare && (
+                    <button
+                      onClick={onShare}
+                      className="flex items-center space-x-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                      </svg>
+                      <span>Jaa</span>
+                    </button>
+                  )}
+                  
+                  {onPermissions && userRole === 'owner' && (
+                    <button
+                      onClick={onPermissions}
+                      className="flex items-center space-x-1 px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                      </svg>
+                      <span>Käyttöoikeudet</span>
+                    </button>
+                  )}
+                  
+                  {onExportPDF && (
+                    <button
+                      onClick={onExportPDF}
+                      disabled={exportingPDF}
+                      className="flex items-center space-x-1 px-2 py-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-xs font-medium rounded transition-colors"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span>{exportingPDF ? 'Viedään...' : 'Vie PDF'}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

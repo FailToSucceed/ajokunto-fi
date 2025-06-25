@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase'
+import { createInvitation, getInvitations, deleteInvitation, generateInvitationUrl, checkUserExists, UserInvitation } from '@/lib/invitations'
 
 interface Permission {
   id: string
@@ -24,14 +25,17 @@ export default function PermissionsManager({
 }: PermissionsManagerProps) {
   const t = useTranslations()
   const [permissions, setPermissions] = useState<Permission[]>([])
+  const [invitations, setInvitations] = useState<UserInvitation[]>([])
   const [loading, setLoading] = useState(true)
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserRole, setNewUserRole] = useState<'contributor' | 'viewer'>('viewer')
   const [addingUser, setAddingUser] = useState(false)
   const [error, setError] = useState('')
+  const [showInvitationOption, setShowInvitationOption] = useState(false)
 
   useEffect(() => {
     loadPermissions()
+    loadInvitations()
   }, [carId])
 
   const loadPermissions = async () => {
@@ -55,26 +59,41 @@ export default function PermissionsManager({
     }
   }
 
+  const loadInvitations = async () => {
+    try {
+      const invites = await getInvitations(carId)
+      setInvitations(invites)
+    } catch (error) {
+      console.error('Error loading invitations:', error)
+    }
+  }
+
   const addUserPermission = async () => {
     if (!newUserEmail.trim()) return
 
     setAddingUser(true)
     setError('')
+    setShowInvitationOption(false)
 
     try {
-      // First, we need to find the user by email
-      // Note: In a real implementation, you'd need an RPC function for this
-      // since direct access to auth.users is restricted
+      // First check if user exists
+      const userExists = await checkUserExists(newUserEmail.trim())
       
-      // For now, let's assume we have a way to get user ID by email
-      // This would typically be done through a server-side function
-      
-      // Placeholder implementation
+      if (!userExists) {
+        // User doesn't exist, show invitation option
+        setShowInvitationOption(true)
+        setAddingUser(false)
+        return
+      }
+
+      // User exists - try to add directly
       const { data: userData, error: userError } = await supabase
-        .rpc('get_user_by_email', { email: newUserEmail })
+        .rpc('get_user_by_email', { email: newUserEmail.trim() })
 
       if (userError || !userData) {
-        setError('Käyttäjää ei löytynyt tällä sähköpostiosoitteella')
+        // If RPC fails, also show invitation option
+        setShowInvitationOption(true)
+        setAddingUser(false)
         return
       }
 
@@ -98,9 +117,49 @@ export default function PermissionsManager({
         await loadPermissions()
       }
     } catch (error) {
-      setError('Käyttäjän lisääminen epäonnistui')
+      console.error('Error in addUserPermission:', error)
+      // On any error, show invitation option
+      setShowInvitationOption(true)
     } finally {
       setAddingUser(false)
+    }
+  }
+
+  const sendInvitation = async () => {
+    if (!newUserEmail.trim()) return
+
+    setAddingUser(true)
+    setError('')
+
+    try {
+      const invitation = await createInvitation(carId, newUserEmail.trim(), newUserRole)
+      
+      if (invitation) {
+        const inviteUrl = generateInvitationUrl(invitation.invitation_token)
+        
+        // Copy to clipboard and show success
+        navigator.clipboard.writeText(inviteUrl)
+        alert(`Kutsu lähetetty! Jakolinkki kopioitu leikepöydälle:\n\n${inviteUrl}\n\nJaa tämä linkki henkilölle: ${newUserEmail}`)
+        
+        setNewUserEmail('')
+        setNewUserRole('viewer')
+        setShowInvitationOption(false)
+        await loadInvitations()
+      } else {
+        setError('Kutsun lähettäminen epäonnistui')
+      }
+    } catch (error) {
+      console.error('Error sending invitation:', error)
+      setError('Kutsun lähettäminen epäonnistui')
+    } finally {
+      setAddingUser(false)
+    }
+  }
+
+  const deleteInvite = async (invitationId: string) => {
+    const success = await deleteInvitation(invitationId)
+    if (success) {
+      await loadInvitations()
     }
   }
 
@@ -188,13 +247,43 @@ export default function PermissionsManager({
               </div>
             </div>
 
-            <button
-              onClick={addUserPermission}
-              disabled={addingUser || !newUserEmail.trim()}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
-            >
-              {addingUser ? 'Lisätään...' : 'Lisää käyttäjä'}
-            </button>
+            <div className="flex space-x-2 mt-4">
+              <button
+                onClick={addUserPermission}
+                disabled={addingUser || !newUserEmail.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+              >
+                {addingUser ? 'Lisätään...' : 'Lisää käyttäjä'}
+              </button>
+              
+              {showInvitationOption && (
+                <button
+                  onClick={sendInvitation}
+                  disabled={addingUser || !newUserEmail.trim()}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-green-400"
+                >
+                  {addingUser ? 'Lähetetään...' : 'Lähetä kutsu'}
+                </button>
+              )}
+            </div>
+            
+            {showInvitationOption && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex">
+                  <svg className="w-5 h-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm text-yellow-800">
+                      <strong>Käyttäjää ei löytynyt tällä sähköpostiosoitteella.</strong>
+                    </p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Voit lähettää kutsun, joka mahdollistaa henkilön rekisteröitymisen ja liittymisen autolle.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -244,6 +333,44 @@ export default function PermissionsManager({
             </div>
           )}
         </div>
+
+        {/* Pending Invitations */}
+        {canManagePermissions && invitations.length > 0 && (
+          <div className="space-y-4 mt-6">
+            <h4 className="font-medium">Odottavat kutsut</h4>
+            <div className="space-y-2">
+              {invitations.map((invitation) => (
+                <div key={invitation.id} className="flex items-center justify-between p-3 border border-yellow-200 bg-yellow-50 rounded-lg">
+                  <div>
+                    <div className="font-medium">{invitation.email}</div>
+                    <div className="text-sm text-gray-600">
+                      {invitation.role === 'contributor' ? 'Muokkaaja' : 'Katselija'} • 
+                      Kutsuttu {new Date(invitation.created_at).toLocaleDateString('fi-FI')}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        const url = generateInvitationUrl(invitation.invitation_token)
+                        navigator.clipboard.writeText(url)
+                        alert('Kutsu kopioitu leikepöydälle!')
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      Kopioi linkki
+                    </button>
+                    <button
+                      onClick={() => deleteInvite(invitation.id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Poista
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-6">
           <div className="text-sm text-gray-600 space-y-2">

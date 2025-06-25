@@ -32,12 +32,24 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
   }
 
   const handleCreateShare = async (permissionType: 'view' | 'edit') => {
+    console.log('handleCreateShare called with:', permissionType)
     setCreating(true)
-    const shareLink = await createShareLink(carId, permissionType, 30) // 30 days expiry
-    if (shareLink) {
-      setShareLinks([shareLink, ...shareLinks])
+    try {
+      const shareLink = await createShareLink(carId, permissionType, 30) // 30 days expiry
+      console.log('Share link result:', shareLink)
+      if (shareLink) {
+        setShareLinks([shareLink, ...shareLinks])
+        console.log('Share link added to state')
+      } else {
+        console.error('Failed to create share link')
+        alert('Jakolinkin luominen epäonnistui. Tarkista konsolista lisätietoja.')
+      }
+    } catch (error) {
+      console.error('Error in handleCreateShare:', error)
+      alert('Virhe jakolinkin luomisessa: ' + error)
+    } finally {
+      setCreating(false)
     }
-    setCreating(false)
   }
 
   const handleDeleteShare = async (shareId: string) => {

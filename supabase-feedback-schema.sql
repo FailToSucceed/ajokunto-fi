@@ -29,16 +29,35 @@ CREATE TABLE shared_checklists (
     accessed_count INTEGER DEFAULT 0
 );
 
+-- User invitations table for inviting users to car permissions
+CREATE TABLE user_invitations (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    car_id UUID REFERENCES cars(id) ON DELETE CASCADE NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    role VARCHAR(20) CHECK (role IN ('owner', 'contributor', 'viewer')) NOT NULL,
+    invitation_token VARCHAR(100) NOT NULL UNIQUE,
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '7 days'),
+    invited_by UUID REFERENCES auth.users(id) NOT NULL,
+    accepted_at TIMESTAMP WITH TIME ZONE,
+    accepted_by UUID REFERENCES auth.users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(car_id, email)
+);
+
 -- Create indexes
 CREATE INDEX idx_feedback_created_at ON feedback(created_at);
 CREATE INDEX idx_email_signups_email ON email_signups(email);
 CREATE INDEX idx_shared_checklists_token ON shared_checklists(share_token);
 CREATE INDEX idx_shared_checklists_car_id ON shared_checklists(car_id);
+CREATE INDEX idx_user_invitations_token ON user_invitations(invitation_token);
+CREATE INDEX idx_user_invitations_car_id ON user_invitations(car_id);
+CREATE INDEX idx_user_invitations_email ON user_invitations(email);
 
 -- Enable RLS
 ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_signups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shared_checklists ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_invitations ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for feedback (anyone can insert, only admins can view)
 CREATE POLICY "Anyone can submit feedback" ON feedback
@@ -78,5 +97,56 @@ CREATE POLICY "Car owners and contributors can delete their shares" ON shared_ch
         car_id IN (
             SELECT car_id FROM car_permissions 
             WHERE user_id = auth.uid() AND role IN ('owner', 'contributor')
+        )
+    );
+
+-- RLS Policies for user invitations
+CREATE POLICY "Car owners can create invitations" ON user_invitations
+    FOR INSERT WITH CHECK (
+        car_id IN (
+            SELECT car_id FROM car_permissions 
+            WHERE user_id = auth.uid() AND role = 'owner'
+        )
+    );
+
+CREATE POLICY "Car owners can view their invitations" ON user_invitations
+    FOR SELECT USING (
+        car_id IN (
+            SELECT car_id FROM car_permissions 
+            WHERE user_id = auth.uid() AND role = 'owner'
+        )
+    );
+
+CREATE POLICY "Car owners can update their invitations" ON user_invitations
+    FOR UPDATE USING (
+        car_id IN (
+            SELECT car_id FROM car_permissions 
+            WHERE user_id = auth.uid() AND role = 'owner'
+        )
+    );
+
+CREATE POLICY "Car owners can delete their invitations" ON user_invitations
+    FOR DELETE USING (
+        car_id IN (
+            SELECT car_id FROM car_permissions 
+            WHERE user_id = auth.uid() AND role = 'owner'
+        )
+    );
+
+CREATE POLICY "Invited users can view their invitations" ON user_invitations
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM auth.users 
+            WHERE auth.users.id = auth.uid() 
+            AND auth.users.email = user_invitations.email
+        )
+    );
+
+CREATE POLICY "Invited users can accept their invitations" ON user_invitations
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM auth.users 
+            WHERE auth.users.id = auth.uid() 
+            AND auth.users.email = user_invitations.email
         )
     );

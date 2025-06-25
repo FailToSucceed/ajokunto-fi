@@ -1,7 +1,68 @@
-import { useTranslations } from 'next-intl';
+'use client'
+
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { supabase } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 export default function HomePage() {
-  const t = useTranslations();
+  const t = useTranslations()
+  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [searchError, setSearchError] = useState('')
+
+  const handleCarSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+
+    setSearching(true)
+    setSearchError('')
+
+    try {
+      // Search for car by registration number
+      const { data: cars, error } = await supabase
+        .from('cars')
+        .select('id, registration_number, make, model, year')
+        .ilike('registration_number', `%${searchQuery.trim()}%`)
+        .limit(5)
+
+      if (error) {
+        console.error('Search error:', error)
+        setSearchError('Virhe haussa')
+        return
+      }
+
+      if (cars && cars.length > 0) {
+        // If exact match found, redirect to car
+        const exactMatch = cars.find(car => 
+          car.registration_number.toLowerCase() === searchQuery.trim().toLowerCase()
+        )
+        
+        if (exactMatch) {
+          router.push(`/car/${exactMatch.id}`)
+          return
+        }
+        
+        // Show results (for now, just go to first result)
+        router.push(`/car/${cars[0].id}`)
+      } else {
+        // No cars found, suggest creating profile
+        const confirmCreate = confirm(
+          `Autoa rekisterinumerolla "${searchQuery.trim()}" ei löytynyt.\n\nHaluatko luoda profiili tälle autolle?`
+        )
+        
+        if (confirmCreate) {
+          router.push(`/auth/signup?newCar=${encodeURIComponent(searchQuery.trim())}`)
+        }
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+      setSearchError('Virhe haussa')
+    } finally {
+      setSearching(false)
+    }
+  }
 
   return (
     <div className="bg-gray-50">
@@ -25,6 +86,44 @@ export default function HomePage() {
               Tämä on ensimmäinen pilottiversio. Arvostavamme suuresti kaikkea palautetta, jotta saamme kehitettyä 
               sovellusta mahdollisimman hyödylliseksi, kiitos kun testaat!
             </p>
+          </div>
+          
+          {/* Car Search */}
+          <div className="mb-12 max-w-md mx-auto">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Hae autoa rekisterinumerolla
+              </h3>
+              
+              {searchError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+                  {searchError}
+                </div>
+              )}
+              
+              <form onSubmit={handleCarSearch} className="space-y-4">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+                  placeholder="ABC-123"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg font-mono"
+                  maxLength={10}
+                />
+                
+                <button
+                  type="submit"
+                  disabled={searching || !searchQuery.trim()}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                >
+                  {searching ? 'Haetaan...' : 'Hae autoa'}
+                </button>
+              </form>
+              
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                Jos autoa ei löydy, ehdotamme auton profiilin luomista
+              </p>
+            </div>
           </div>
           
           {/* Role Cards */}
