@@ -1,0 +1,68 @@
+{
+  "common": {
+    "title": "Ajokunto.fi",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close"
+  },
+  "landing": {
+    "title": "Car Condition Transparency",
+    "subtitle": "Create comprehensive car profiles and share inspection data with buyers and sellers",
+    "buyer": "Buyer",
+    "seller": "Seller",
+    "owner": "Owner"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "myCars": "My Cars",
+    "addCar": "Add Car",
+    "noCars": "No cars yet"
+  },
+  "car": {
+    "title": "Car Profile",
+    "registrationNumber": "Registration Number",
+    "generalInfo": "General Information",
+    "inspectionChecklist": "Inspection Checklist",
+    "maintenanceRecords": "Maintenance Records",
+    "suggestedMaintenance": "Suggested Maintenance",
+    "approvals": "Approvals"
+  },
+  "checklist": {
+    "title": "Inspection Checklist",
+    "documentation": "Documentation",
+    "exterior": "Exterior",
+    "interior": "Interior",
+    "technical": "Technical",
+    "test_drive": "Test Drive",
+    "expert_review": "Expert Review",
+    "cost_estimates": "Cost Estimates",
+    "buyer_advice": "Buyer Advice",
+    "status": {
+      "ok": "OK",
+      "warning": "Warning",
+      "issue": "Issue"
+    }
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "noAccount": "Don't have an account? Sign up",
+    "hasAccount": "Already have an account? Sign in"
+  },
+  "permissions": {
+    "title": "Permissions",
+    "addUser": "Add User",
+    "roles": {
+      "owner": "Owner",
+      "contributor": "Contributor",
+      "viewer": "Viewer"
+    }
+  }
+}

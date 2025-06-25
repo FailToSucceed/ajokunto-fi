@@ -1,0 +1,68 @@
+{
+  "common": {
+    "title": "Ajokunto.fi",
+    "loading": "Ladataan...",
+    "save": "Tallenna",
+    "cancel": "Peruuta",
+    "edit": "Muokkaa",
+    "delete": "Poista",
+    "confirm": "Vahvista",
+    "close": "Sulje"
+  },
+  "landing": {
+    "title": "Auton kunnon läpinäkyvyys",
+    "subtitle": "Luo kattava profiili autolle ja jaa tarkastustiedot ostajien ja myyjien kanssa",
+    "buyer": "Ostaja",
+    "seller": "Myyjä",
+    "owner": "Omistaja"
+  },
+  "dashboard": {
+    "title": "Kojelauta",
+    "myCars": "Omat autot",
+    "addCar": "Lisää auto",
+    "noCars": "Ei autoja vielä"
+  },
+  "car": {
+    "title": "Auton profiili",
+    "registrationNumber": "Rekisterinumero",
+    "generalInfo": "Yleistiedot",
+    "inspectionChecklist": "Tarkastuslista",
+    "maintenanceRecords": "Huoltohistoria",
+    "suggestedMaintenance": "Ehdotettu huolto",
+    "approvals": "Hyväksynnät"
+  },
+  "checklist": {
+    "title": "Tarkastuslista",
+    "documentation": "Dokumentaatio",
+    "exterior": "Ulkopinta",
+    "interior": "Sisätila",
+    "technical": "Tekniikka",
+    "test_drive": "Koeajo",
+    "expert_review": "Asiantuntija-arvio",
+    "cost_estimates": "Kustannusarviot",
+    "buyer_advice": "Ostajan neuvot",
+    "status": {
+      "ok": "OK",
+      "warning": "Huomio",
+      "issue": "Ongelma"
+    }
+  },
+  "auth": {
+    "signIn": "Kirjaudu sisään",
+    "signUp": "Rekisteröidy",
+    "signOut": "Kirjaudu ulos",
+    "email": "Sähköposti",
+    "password": "Salasana",
+    "noAccount": "Eikö sinulla ole tiliä? Rekisteröidy",
+    "hasAccount": "Onko sinulla jo tili? Kirjaudu sisään"
+  },
+  "permissions": {
+    "title": "Käyttöoikeudet",
+    "addUser": "Lisää käyttäjä",
+    "roles": {
+      "owner": "Omistaja",
+      "contributor": "Muokkaaja",
+      "viewer": "Katselija"
+    }
+  }
+}
