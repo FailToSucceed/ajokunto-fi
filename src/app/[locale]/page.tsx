@@ -40,7 +40,7 @@ export default function HomePage() {
               <h3 className="text-xl font-bold text-gray-900 mb-4">Auton Ostajalle</h3>
               <p className="text-gray-600 text-sm mb-6">
                 Vältä kalliit virheet tarkastamalla auto ennen 
-                ostopäätöstä ja varmistamalla.
+                ostopäätöstä.
               </p>
               <ul className="text-left text-sm text-gray-600 space-y-2 mb-6">
                 <li className="flex items-start">
@@ -50,7 +50,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">▶</span>
-                  Vältä kalliit ja salaiset yllätykset
+                  Vältä ikävät ja kalliit yllätykset
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">▶</span>
@@ -106,18 +106,18 @@ export default function HomePage() {
               <ul className="text-left text-sm text-gray-600 space-y-2 mb-6">
                 <li className="flex items-start">
                   <span className="text-green-600 mr-2">▶</span>
-                  Saat yksilöllisen huolto- ja 
+                  Saat huolto- ja 
                   ylläpitosuunnitelman
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-600 mr-2">▶</span>
-                  Seuraat rajaa kaikissa tilanteissa ja 
-                  optimoiduilla huoltoväleillä
+                  Tiedät milloin on aika vaihtaa renkaat tai 
+                  tehdä määräaikaishuolto
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-600 mr-2">▶</span>
-                  Säästät rahaa ehkäisevässä ja 
-                  optimoiduissa huoltokustannuksissa
+                  Säästät rahaa kilpailutetulla ja optimoidulla 
+                  huoltosuunnitelmalla
                 </li>
               </ul>
               <a href="/auth/signup" className="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors text-center">
