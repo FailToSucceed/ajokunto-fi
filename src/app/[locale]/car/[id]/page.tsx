@@ -1,9 +1,10 @@
 import CarProfile from '@/components/car/CarProfile'
 
 interface CarPageProps {
-  params: { id: string; locale: string }
+  params: Promise<{ id: string; locale: string }>
 }
 
-export default function CarPage({ params }: CarPageProps) {
-  return <CarProfile carId={params.id} />
+export default async function CarPage({ params }: CarPageProps) {
+  const { id } = await params
+  return <CarProfile carId={id} />
 }
