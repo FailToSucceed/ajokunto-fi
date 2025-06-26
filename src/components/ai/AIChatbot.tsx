@@ -235,7 +235,7 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Kysy autostasi..."
+                placeholder={!subscription?.can_use_ai ? "Lataa tilaustietoja..." : "Kysy autostasi..."}
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading || !subscription?.can_use_ai}
               />
@@ -250,9 +250,15 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
               </button>
             </div>
 
-            {subscription && subscription.type === 'free' && (
-              <p className="text-xs text-gray-500 mt-2">
-                Ilmaiskäyttäjä: {subscription.queries_used}/{subscription.queries_limit} kysymystä käytetty
+            {subscription ? (
+              subscription.type === 'free' && (
+                <p className="text-xs text-gray-500 mt-2">
+                  Ilmaiskäyttäjä: {subscription.queries_used}/{subscription.queries_limit} kysymystä käytetty
+                </p>
+              )
+            ) : (
+              <p className="text-xs text-red-500 mt-2">
+                Ladataan tilaustietoja... Jos ongelma jatkuu, tarkista API-avain.
               </p>
             )}
           </div>
@@ -347,7 +353,7 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Kysy autostasi..."
+            placeholder={!subscription?.can_use_ai ? "Lataa tilaustietoja..." : "Kysy autostasi..."}
             className="flex-1 resize-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={1}
             disabled={isLoading || !subscription?.can_use_ai}
@@ -363,9 +369,15 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
           </button>
         </div>
         
-        {subscription && subscription.type === 'free' && (
-          <p className="text-xs text-gray-500 mt-2">
-            Ilmaiskäyttäjä: {subscription.queries_used}/{subscription.queries_limit} kysymystä käytetty
+        {subscription ? (
+          subscription.type === 'free' && (
+            <p className="text-xs text-gray-500 mt-2">
+              Ilmaiskäyttäjä: {subscription.queries_used}/{subscription.queries_limit} kysymystä käytetty
+            </p>
+          )
+        ) : (
+          <p className="text-xs text-red-500 mt-2">
+            Ladataan tilaustietoja... Jos ongelma jatkuu, tarkista API-avain.
           </p>
         )}
       </div>
