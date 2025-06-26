@@ -2,7 +2,7 @@
 -- Run this in Supabase SQL Editor
 
 -- User subscriptions for premium AI features
-CREATE TABLE IF NOT EXISTS IF NOT EXISTS user_subscriptions (
+CREATE TABLE IF NOT EXISTS user_subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   subscription_type TEXT NOT NULL CHECK (subscription_type IN ('free', 'premium', 'pro')),
