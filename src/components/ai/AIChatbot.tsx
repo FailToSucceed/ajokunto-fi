@@ -60,22 +60,34 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
 
   const loadSubscriptionInfo = async () => {
     try {
+      console.log('Loading subscription info...')
+      
       // Get auth token
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      console.log('Session:', { hasSession: !!session, hasToken: !!session?.access_token, error: sessionError })
+      
       if (!session?.access_token) {
+        console.log('No session or token found')
         setError('Kirjautuminen vaaditaan AI-ominaisuuksien käyttöön')
         return
       }
 
+      console.log('Making API request with token...')
       const response = await fetch('/api/ai/chat', {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
       })
+      
+      console.log('API response:', { status: response.status, ok: response.ok })
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('Subscription data:', data)
         setSubscription(data.subscription)
       } else {
+        const errorData = await response.json()
+        console.log('API error:', errorData)
         setError('Ladataan tilaustietoja... Jos ongelma jatkuu, tarkista API-avain.')
       }
     } catch (error) {
