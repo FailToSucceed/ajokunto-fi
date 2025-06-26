@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
 interface CarCreationModalProps {
@@ -8,9 +8,10 @@ interface CarCreationModalProps {
   onClose: () => void
   onCarCreated: (carId: string) => void
   userId: string
+  initialRegistrationNumber?: string
 }
 
-export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId }: CarCreationModalProps) {
+export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId, initialRegistrationNumber }: CarCreationModalProps) {
   const [formData, setFormData] = useState({
     registration_number: '',
     make: '',
@@ -20,6 +21,16 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Set initial registration number when modal opens
+  useEffect(() => {
+    if (isOpen && initialRegistrationNumber) {
+      setFormData(prev => ({
+        ...prev,
+        registration_number: initialRegistrationNumber
+      }))
+    }
+  }, [isOpen, initialRegistrationNumber])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target

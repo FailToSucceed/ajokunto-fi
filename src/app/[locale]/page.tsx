@@ -1,20 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { getCurrentUser } from '@/lib/auth'
 import { User } from '@supabase/supabase-js'
+import CarCreationModal from '@/components/dashboard/CarCreationModal'
 
 export default function HomePage() {
   const t = useTranslations()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showCarCreation, setShowCarCreation] = useState(false)
 
   useEffect(() => {
     async function checkUser() {
@@ -37,10 +40,7 @@ export default function HomePage() {
     checkUser()
   }, [router])
 
-  const handleCarSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!searchQuery.trim()) return
-
+  const handleCarSearchInternal = useCallback(async (query: string) => {
     setSearching(true)
     setSearchError('')
 
@@ -49,7 +49,7 @@ export default function HomePage() {
       const { data: cars, error } = await supabase
         .from('cars')
         .select('id, registration_number, make, model, year')
-        .ilike('registration_number', `%${searchQuery.trim()}%`)
+        .ilike('registration_number', `%${query.trim()}%`)
         .limit(5)
 
       if (error) {
@@ -61,7 +61,7 @@ export default function HomePage() {
       if (cars && cars.length > 0) {
         // If exact match found, redirect to car
         const exactMatch = cars.find(car => 
-          car.registration_number.toLowerCase() === searchQuery.trim().toLowerCase()
+          car.registration_number.toLowerCase() === query.trim().toLowerCase()
         )
         
         if (exactMatch) {
@@ -73,7 +73,7 @@ export default function HomePage() {
         router.push(`/car/${cars[0].id}`)
       } else {
         // No cars found, show error message with create profile option
-        setSearchError(`Tietokannastamme ei löydy autoa hakemallasi rekisterinumerolla "${searchQuery.trim()}".`)
+        setSearchError(`Hakemallasi rekisterinumerolla ei ole profiilia`)
       }
     } catch (error) {
       console.error('Search error:', error)
@@ -81,6 +81,38 @@ export default function HomePage() {
     } finally {
       setSearching(false)
     }
+  }, [router])
+
+  // Handle search from URL parameters (when redirected from dashboard)
+  useEffect(() => {
+    const searchFromUrl = searchParams.get('search')
+    if (searchFromUrl) {
+      setSearchQuery(searchFromUrl)
+      // Automatically trigger search
+      handleCarSearchInternal(searchFromUrl)
+    }
+  }, [searchParams, handleCarSearchInternal])
+
+  const handleCarCreated = async (carId: string) => {
+    // Redirect to the newly created car
+    router.push(`/car/${carId}`)
+  }
+
+  const handleCreateProfile = () => {
+    if (user) {
+      // User is logged in, show car creation modal
+      setShowCarCreation(true)
+    } else {
+      // User not logged in, redirect to signup
+      router.push(`/auth/signup?newCar=${encodeURIComponent(searchQuery.trim())}`)
+    }
+  }
+
+  const handleCarSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!searchQuery.trim()) return
+    
+    await handleCarSearchInternal(searchQuery.trim())
   }
 
   // Show loading while checking authentication
@@ -95,7 +127,19 @@ export default function HomePage() {
   // If user is logged in, the useEffect will redirect to dashboard
   // This return should only show for non-authenticated users
   return (
-    <div className="bg-gray-50">
+    <>
+      {/* Car Creation Modal */}
+      {user && (
+        <CarCreationModal
+          isOpen={showCarCreation}
+          onClose={() => setShowCarCreation(false)}
+          onCarCreated={handleCarCreated}
+          userId={user.id}
+          initialRegistrationNumber={searchQuery.trim()}
+        />
+      )}
+
+      <div className="bg-gray-50">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
           {/* Logo/Brand Section */}
@@ -128,12 +172,12 @@ export default function HomePage() {
               {searchError && (
                 <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-lg mb-4 text-sm">
                   <p className="mb-3">{searchError}</p>
-                  {searchError.includes('ei löydy autoa') && (
+                  {searchError.includes('ei ole profiilia') && (
                     <button
-                      onClick={() => router.push(`/auth/signup?newCar=${encodeURIComponent(searchQuery.trim())}`)}
+                      onClick={handleCreateProfile}
                       className="bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
                     >
-                      Luo profiili
+                      Luo autolle profiili
                     </button>
                   )}
                 </div>
@@ -272,5 +316,6 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
