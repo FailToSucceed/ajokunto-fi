@@ -413,7 +413,7 @@ export default function Profile() {
 
           {/* Danger Zone */}
           <div className="bg-white rounded-lg shadow-sm border border-red-200 p-6">
-            <h2 className="text-xl font-semibold text-red-900 mb-4">Vaaralliset toiminnot</h2>
+            <h2 className="text-xl font-semibold text-red-900 mb-4">Kirjaudu ulos tai poista tili</h2>
             
             <div className="space-y-4">
               <button
