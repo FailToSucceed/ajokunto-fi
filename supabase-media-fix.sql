@@ -1,8 +1,12 @@
 -- Fix media table RLS policy to work with simplified car policies
 -- Run this in your Supabase SQL Editor after running supabase-nuclear-fix.sql
 
--- Step 1: Drop existing media policies
+-- Step 1: Drop ALL existing media policies
 DROP POLICY IF EXISTS "Contributors and owners can manage media" ON media;
+DROP POLICY IF EXISTS "media_select_policy" ON media;
+DROP POLICY IF EXISTS "media_insert_policy" ON media;
+DROP POLICY IF EXISTS "media_update_policy" ON media;
+DROP POLICY IF EXISTS "media_delete_policy" ON media;
 
 -- Step 2: Create simplified media policies that work with the simplified car policies
 CREATE POLICY "media_select_policy" ON media
