@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { signOut, getCurrentUser } from '@/lib/auth'
 import { User } from '@supabase/supabase-js'
+import CarCreationModal from './CarCreationModal'
 
 interface Car {
   id: string
@@ -98,6 +99,27 @@ export default function Dashboard() {
     setShowCarSelection(false)
   }
 
+  const handleCarCreated = async (carId: string) => {
+    // Reload cars to include the new one
+    if (user) {
+      const { data: carData } = await supabase
+        .from('cars')
+        .select(`
+          *,
+          car_permissions!inner(role)
+        `)
+        .eq('car_permissions.user_id', user.id)
+      
+      if (carData) {
+        const carsWithRoles = carData.map(car => ({
+          ...car,
+          role: car.car_permissions[0].role
+        }))
+        setCars(carsWithRoles)
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -111,6 +133,14 @@ export default function Dashboard() {
 
   return (
     <>
+      {/* Car Creation Modal */}
+      <CarCreationModal
+        isOpen={showAddCar}
+        onClose={() => setShowAddCar(false)}
+        onCarCreated={handleCarCreated}
+        userId={user?.id || ''}
+      />
+
       {/* Car Selection Modal */}
       {showCarSelection && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
