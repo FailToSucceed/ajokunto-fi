@@ -1,0 +1,327 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // Service role for admin operations
+)
+
+export interface AIAnalysisRequest {
+  carId: string
+  userId: string
+  inspectionData: any
+  carModel?: {
+    make: string
+    model: string
+    year: number
+  }
+}
+
+export interface AIAnalysisResponse {
+  questions: string[]
+  concerns: Array<{
+    category: string
+    severity: 'low' | 'medium' | 'high' | 'critical'
+    description: string
+    recommendation: string
+  }>
+  maintenance_suggestions: Array<{
+    item: string
+    urgency: 'immediate' | 'soon' | 'routine'
+    estimated_cost?: string
+  }>
+  overall_assessment: string
+}
+
+export interface SubscriptionInfo {
+  type: 'free' | 'premium' | 'pro'
+  queries_used: number
+  queries_limit: number
+  can_use_ai: boolean
+}
+
+export class AIService {
+  private openaiApiKey: string
+
+  constructor() {
+    this.openaiApiKey = process.env.OPENAI_API_KEY!
+    if (!this.openaiApiKey) {
+      throw new Error('OPENAI_API_KEY is not configured')
+    }
+  }
+
+  /**
+   * Check if user can use AI features
+   */
+  async checkAIUsageLimit(userId: string): Promise<SubscriptionInfo> {
+    const { data, error } = await supabase
+      .rpc('check_ai_usage_limit', { user_uuid: userId })
+
+    if (error) throw error
+
+    // Get current subscription info
+    const { data: subscription } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+
+    return {
+      type: subscription?.subscription_type || 'free',
+      queries_used: subscription?.ai_queries_used || 0,
+      queries_limit: subscription?.ai_queries_limit || 3,
+      can_use_ai: data || false
+    }
+  }
+
+  /**
+   * Increment AI usage counter
+   */
+  async incrementAIUsage(userId: string): Promise<void> {
+    const { error } = await supabase
+      .rpc('increment_ai_usage', { user_uuid: userId })
+    
+    if (error) throw error
+  }
+
+  /**
+   * Get car model knowledge from database
+   */
+  async getCarKnowledge(make: string, model: string, year: number) {
+    const { data: carModel } = await supabase
+      .from('car_models')
+      .select(`
+        *,
+        common_issues(*),
+        recalls(*),
+        inspection_statistics(*),
+        maintenance_schedules(*)
+      `)
+      .eq('make', make)
+      .eq('model', model)
+      .lte('year_from', year)
+      .gte('year_to', year)
+      .single()
+
+    return carModel
+  }
+
+  /**
+   * Analyze inspection data with AI
+   */
+  async analyzeInspectionData(request: AIAnalysisRequest): Promise<AIAnalysisResponse> {
+    // Check usage limits
+    const subscription = await this.checkAIUsageLimit(request.userId)
+    if (!subscription.can_use_ai) {
+      throw new Error('AI usage limit exceeded. Please upgrade your subscription.')
+    }
+
+    // Get car knowledge from our database
+    let carKnowledge = null
+    if (request.carModel) {
+      carKnowledge = await this.getCarKnowledge(
+        request.carModel.make, 
+        request.carModel.model, 
+        request.carModel.year
+      )
+    }
+
+    // Prepare context for AI
+    const context = {
+      inspection_data: request.inspectionData,
+      car_knowledge: carKnowledge,
+      analysis_focus: [
+        'missing_information',
+        'potential_issues',
+        'maintenance_recommendations',
+        'safety_concerns'
+      ]
+    }
+
+    // Create AI prompt
+    const prompt = this.createAnalysisPrompt(context)
+
+    try {
+      // Call OpenAI API
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert automotive inspector and mechanic. Analyze the provided inspection data and car knowledge to provide helpful insights.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.3
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.statusText}`)
+      }
+
+      const aiResponse = await response.json()
+      const analysis = JSON.parse(aiResponse.choices[0].message.content)
+
+      // Save conversation to database
+      await supabase.from('ai_conversations').insert({
+        user_id: request.userId,
+        car_id: request.carId,
+        conversation_type: 'analysis',
+        input_data: context,
+        ai_response: analysis,
+        tokens_used: aiResponse.usage?.total_tokens || 0
+      })
+
+      // Increment usage counter
+      await this.incrementAIUsage(request.userId)
+
+      return analysis
+
+    } catch (error) {
+      console.error('AI Analysis error:', error)
+      throw new Error('Failed to analyze inspection data')
+    }
+  }
+
+  /**
+   * Chat about car issues
+   */
+  async chatAboutCar(
+    userId: string, 
+    carId: string, 
+    message: string, 
+    conversationHistory: Array<{role: string, content: string}> = []
+  ): Promise<string> {
+    // Check usage limits
+    const subscription = await this.checkAIUsageLimit(userId)
+    if (!subscription.can_use_ai) {
+      throw new Error('AI usage limit exceeded. Please upgrade your subscription.')
+    }
+
+    // Get car and inspection data
+    const { data: car } = await supabase
+      .from('cars')
+      .select(`
+        *,
+        checklist_items(*),
+        maintenance_records(*)
+      `)
+      .eq('id', carId)
+      .single()
+
+    if (!car) throw new Error('Car not found')
+
+    // Get car knowledge
+    const carKnowledge = await this.getCarKnowledge(car.make, car.model, car.year)
+
+    // Prepare context
+    const context = {
+      car_info: car,
+      car_knowledge: carKnowledge,
+      current_question: message
+    }
+
+    const systemPrompt = `You are an expert automotive advisor. You have access to this car's inspection data and known issues for this model. Answer the user's questions helpfully and accurately. Keep responses concise but informative.
+
+Car: ${car.make} ${car.model} ${car.year}
+Registration: ${car.registration_number}`
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...conversationHistory,
+            { role: 'user', content: message }
+          ],
+          max_tokens: 800,
+          temperature: 0.7
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.statusText}`)
+      }
+
+      const aiResponse = await response.json()
+      const reply = aiResponse.choices[0].message.content
+
+      // Save conversation
+      await supabase.from('ai_conversations').insert({
+        user_id: userId,
+        car_id: carId,
+        conversation_type: 'chat',
+        input_data: { message, context },
+        ai_response: { reply },
+        tokens_used: aiResponse.usage?.total_tokens || 0
+      })
+
+      // Increment usage
+      await this.incrementAIUsage(userId)
+
+      return reply
+
+    } catch (error) {
+      console.error('AI Chat error:', error)
+      throw new Error('Failed to get AI response')
+    }
+  }
+
+  private createAnalysisPrompt(context: any): string {
+    return `
+Please analyze this car inspection data and provide insights in JSON format:
+
+Inspection Data:
+${JSON.stringify(context.inspection_data, null, 2)}
+
+Car Knowledge:
+${context.car_knowledge ? JSON.stringify(context.car_knowledge, null, 2) : 'No specific model data available'}
+
+Please respond with JSON in this exact format:
+{
+  "questions": ["List of 3-5 specific follow-up questions based on missing or unclear inspection data"],
+  "concerns": [
+    {
+      "category": "brake_system",
+      "severity": "medium",
+      "description": "Description of the concern",
+      "recommendation": "What should be done"
+    }
+  ],
+  "maintenance_suggestions": [
+    {
+      "item": "Brake pads",
+      "urgency": "soon",
+      "estimated_cost": "200-400 EUR"
+    }
+  ],
+  "overall_assessment": "Brief summary of the car's condition and key recommendations"
+}
+
+Focus on:
+1. Missing inspection data that would be important
+2. Potential issues based on the filled data
+3. Known issues for this car model
+4. Maintenance recommendations based on mileage/age
+5. Safety-critical items that need attention
+`
+  }
+}
+
+export const aiService = new AIService()

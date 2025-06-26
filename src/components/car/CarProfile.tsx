@@ -9,8 +9,11 @@ import { User } from '@supabase/supabase-js'
 import ChecklistSection from './ChecklistSection'
 import PermissionsManager from './PermissionsManager'
 import SharingModal from './SharingModal'
+import AIChatbot from '../ai/AIChatbot'
+import AIAnalysisResults from '../ai/AIAnalysisResults'
 import { generateChecklistPDF, downloadPDF } from '@/lib/pdf-export'
 import { CHECKLIST_SECTIONS } from '@/data/checklist-items'
+import { useAI } from '@/hooks/useAI'
 
 interface Car {
   id: string
@@ -38,6 +41,7 @@ export default function CarProfile({ carId }: CarProfileProps) {
   const [showSharing, setShowSharing] = useState(false)
   const [exportingPDF, setExportingPDF] = useState(false)
   const [saving, setSaving] = useState(false)
+  const { analyzeInspectionData, analysis, isAnalyzing, error: aiError, resetAnalysis } = useAI()
 
   useEffect(() => {
     async function loadCarData() {
@@ -217,6 +221,30 @@ export default function CarProfile({ carId }: CarProfileProps) {
                 </div>
               </div>
             </div>
+
+            {/* AI Chat Section in Car Info */}
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  🤖 Kysy AI:lta autostasi
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  Testaa mitä autoon perehtynyt kesäharjoittelija AI-botti <strong>Kimi-Mika</strong> tietää tästä autosta
+                </p>
+              </div>
+              
+              <AIChatbot
+                carId={carId}
+                carInfo={{
+                  make: car.make || 'Tuntematon',
+                  model: car.model || 'Tuntematon',
+                  year: car.year || 0,
+                  registration_number: car.registration_number
+                }}
+                embedded={true}
+              />
+            </div>
+
           </div>
 
           {/* Tabs */}
@@ -320,6 +348,99 @@ export default function CarProfile({ carId }: CarProfileProps) {
                     userRole={car.userRole}
                   />
                 ))}
+
+                {/* AI Analysis Section */}
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-900">🤖 AI Tarkastusanalyysi</h2>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (!car) return
+                        resetAnalysis()
+                        
+                        // Collect inspection data from current checklist
+                        const { data: checklistData } = await supabase
+                          .from('checklist_items')
+                          .select('*')
+                          .eq('car_id', carId)
+                        
+                        const inspectionData = {
+                          checklist: checklistData || [],
+                          registration_number: car.registration_number,
+                          year: car.year,
+                          make: car.make,
+                          model: car.model
+                        }
+
+                        const carModel = {
+                          make: car.make,
+                          model: car.model,
+                          year: car.year
+                        }
+
+                        await analyzeInspectionData(carId, inspectionData, carModel)
+                      }}
+                      disabled={isAnalyzing}
+                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <span>{isAnalyzing ? 'Analysoidaan...' : 'Analysoi AI:lla'}</span>
+                    </button>
+                  </div>
+
+                  {aiError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <div className="flex">
+                        <svg className="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <div className="ml-3">
+                          <p className="text-red-800">{aiError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {analysis && <AIAnalysisResults analysis={analysis} />}
+
+                  {!analysis && !isAnalyzing && !aiError && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 text-center">
+                      <svg className="w-12 h-12 text-purple-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <h3 className="text-lg font-medium text-purple-900 mb-2">🔍 AI Tarkastusanalyysi</h3>
+                      <p className="text-purple-700 mb-4">
+                        Anna AI:n analysoida auton tarkastustiedot ja saa älykkäitä suosituksia huollosta ja mahdollisista ongelmista.
+                      </p>
+                      <p className="text-sm text-purple-600 mb-4">
+                        AI käyttää tietokantaa yleisistä automallin vioista, takaisinkutsuista ja katsastustilastoista.
+                      </p>
+                      <div className="flex items-center justify-center space-x-4 text-sm text-purple-600">
+                        <div className="flex items-center space-x-1">
+                          <span>🔧</span>
+                          <span>Huoltosuositukset</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <span>⚠️</span>
+                          <span>Riskianalyysi</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <span>❓</span>
+                          <span>Tarkentavat kysymykset</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Bottom action buttons */}
@@ -378,6 +499,7 @@ export default function CarProfile({ carId }: CarProfileProps) {
             </div>
           )}
 
+
           {activeTab === 'maintenance' && (
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -429,6 +551,7 @@ export default function CarProfile({ carId }: CarProfileProps) {
           onClose={() => setShowSharing(false)}
         />
       )}
+
     </div>
   )
 }
