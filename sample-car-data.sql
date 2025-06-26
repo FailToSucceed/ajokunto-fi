@@ -57,7 +57,8 @@ SELECT
   true,
   'Jarrulevyjen vaihto parannettuihin malleihin.',
   'EU'
-FROM car_models WHERE make = 'BMW' AND model = '320d' LIMIT 1;
+FROM car_models WHERE make = 'BMW' AND model = '320d' LIMIT 1
+ON CONFLICT (recall_number) DO NOTHING;
 
 -- Insert inspection statistics
 INSERT INTO inspection_statistics (car_model_id, inspection_year, total_inspections, pass_rate, common_failure_reasons, average_mileage_at_inspection, data_source)

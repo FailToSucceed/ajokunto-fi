@@ -2,7 +2,7 @@
 -- Run this in Supabase SQL Editor
 
 -- User subscriptions for premium AI features
-CREATE TABLE user_subscriptions (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS user_subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   subscription_type TEXT NOT NULL CHECK (subscription_type IN ('free', 'premium', 'pro')),
@@ -14,7 +14,7 @@ CREATE TABLE user_subscriptions (
 );
 
 -- Car models and specifications
-CREATE TABLE car_models (
+CREATE TABLE IF NOT EXISTS car_models (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   make TEXT NOT NULL,
   model TEXT NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE car_models (
 );
 
 -- Common issues for car models
-CREATE TABLE common_issues (
+CREATE TABLE IF NOT EXISTS common_issues (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_model_id UUID REFERENCES car_models(id) ON DELETE CASCADE,
   issue_category TEXT NOT NULL, -- 'engine', 'transmission', 'electrical', etc.
@@ -48,7 +48,7 @@ CREATE TABLE common_issues (
 );
 
 -- Recalls and safety notices
-CREATE TABLE recalls (
+CREATE TABLE IF NOT EXISTS recalls (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_model_id UUID REFERENCES car_models(id) ON DELETE CASCADE,
   recall_number TEXT UNIQUE,
@@ -65,7 +65,7 @@ CREATE TABLE recalls (
 );
 
 -- Inspection statistics by model
-CREATE TABLE inspection_statistics (
+CREATE TABLE IF NOT EXISTS inspection_statistics (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_model_id UUID REFERENCES car_models(id) ON DELETE CASCADE,
   inspection_year INTEGER,
@@ -79,7 +79,7 @@ CREATE TABLE inspection_statistics (
 );
 
 -- Maintenance schedules and recommendations
-CREATE TABLE maintenance_schedules (
+CREATE TABLE IF NOT EXISTS maintenance_schedules (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   car_model_id UUID REFERENCES car_models(id) ON DELETE CASCADE,
   service_type TEXT NOT NULL, -- 'oil_change', 'brake_pads', 'timing_belt', etc.
@@ -93,7 +93,7 @@ CREATE TABLE maintenance_schedules (
 );
 
 -- AI conversation history
-CREATE TABLE ai_conversations (
+CREATE TABLE IF NOT EXISTS ai_conversations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   car_id UUID REFERENCES cars(id) ON DELETE CASCADE,
@@ -144,6 +144,7 @@ FROM auth.users
 WHERE id NOT IN (SELECT user_id FROM user_subscriptions);
 
 -- Function to check AI usage limits
+DROP FUNCTION IF EXISTS check_ai_usage_limit(UUID);
 CREATE OR REPLACE FUNCTION check_ai_usage_limit(user_uuid UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
@@ -175,6 +176,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to increment AI usage
+DROP FUNCTION IF EXISTS increment_ai_usage(UUID);
 CREATE OR REPLACE FUNCTION increment_ai_usage(user_uuid UUID)
 RETURNS VOID AS $$
 BEGIN
