@@ -4,16 +4,24 @@ import { aiService } from '@/lib/ai-service'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('AI Chat POST request received')
+    
     // Check authentication
     const user = await getCurrentUser()
     if (!user) {
+      console.log('No user found - unauthorized')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    console.log('User authenticated:', user.id)
 
     const body = await request.json()
     const { carId, message, conversationHistory = [] } = body
+    
+    console.log('Request body:', { carId, message: message?.substring(0, 50) + '...', historyLength: conversationHistory.length })
 
     if (!carId || !message) {
+      console.log('Missing required fields:', { carId: !!carId, message: !!message })
       return NextResponse.json({ 
         error: 'Missing required fields: carId, message' 
       }, { status: 400 })
@@ -35,6 +43,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('AI Chat API error:', error)
+    console.error('Error stack:', error.stack)
     
     if (error.message.includes('usage limit exceeded')) {
       return NextResponse.json({ 
@@ -43,9 +52,16 @@ export async function POST(request: NextRequest) {
       }, { status: 429 })
     }
 
+    if (error.message.includes('OPENAI_API_KEY')) {
+      return NextResponse.json({ 
+        error: 'API_KEY_MISSING',
+        message: 'OpenAI API key not configured'
+      }, { status: 500 })
+    }
+
     return NextResponse.json({ 
       error: 'CHAT_FAILED',
-      message: 'Failed to get AI response' 
+      message: 'Failed to get AI response: ' + error.message
     }, { status: 500 })
   }
 }

@@ -45,25 +45,63 @@ export class AIService {
   constructor() {
     this.openaiApiKey = process.env.OPENAI_API_KEY!
     if (!this.openaiApiKey) {
+      console.error('OPENAI_API_KEY is not configured in environment variables')
       throw new Error('OPENAI_API_KEY is not configured')
     }
+    console.log('AI Service initialized with API key:', this.openaiApiKey ? 'Present' : 'Missing')
   }
 
   /**
    * Check if user can use AI features
    */
   async checkAIUsageLimit(userId: string): Promise<SubscriptionInfo> {
+    console.log('Checking AI usage limit for user:', userId)
+    
     const { data, error } = await supabase
       .rpc('check_ai_usage_limit', { user_uuid: userId })
 
-    if (error) throw error
+    if (error) {
+      console.error('RPC check_ai_usage_limit error:', error)
+      throw error
+    }
 
     // Get current subscription info
-    const { data: subscription } = await supabase
+    const { data: subscription, error: subError } = await supabase
       .from('user_subscriptions')
       .select('*')
       .eq('user_id', userId)
       .single()
+      
+    if (subError) {
+      console.error('Subscription query error:', subError)
+      // Create default subscription if not found
+      if (subError.code === 'PGRST116') { // No rows returned
+        console.log('No subscription found, creating default free subscription')
+        const { data: newSub, error: createError } = await supabase
+          .from('user_subscriptions')
+          .insert({
+            user_id: userId,
+            subscription_type: 'free',
+            ai_queries_limit: 3,
+            ai_queries_used: 0
+          })
+          .select()
+          .single()
+          
+        if (createError) {
+          console.error('Failed to create subscription:', createError)
+          throw createError
+        }
+        
+        return {
+          type: 'free',
+          queries_used: 0,
+          queries_limit: 3,
+          can_use_ai: true
+        }
+      }
+      throw subError
+    }
 
     return {
       type: subscription?.subscription_type || 'free',
