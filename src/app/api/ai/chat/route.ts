@@ -1,15 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
 import { aiService } from '@/lib/ai-service'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function POST(request: NextRequest) {
   try {
     console.log('AI Chat POST request received')
     
-    // Check authentication
-    const user = await getCurrentUser()
-    if (!user) {
-      console.log('No user found - unauthorized')
+    // Get auth header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.log('No auth header found')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.substring(7)
+    
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+    if (error || !user) {
+      console.log('Token verification failed:', error?.message)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
@@ -68,9 +82,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const user = await getCurrentUser()
-    if (!user) {
+    // Get auth header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.substring(7)
+    
+    // Verify token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token)
+    if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

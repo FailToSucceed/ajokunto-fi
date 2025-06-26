@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { supabase } from '@/lib/supabase'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -59,13 +60,27 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
 
   const loadSubscriptionInfo = async () => {
     try {
-      const response = await fetch('/api/ai/chat')
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        setError('Kirjautuminen vaaditaan AI-ominaisuuksien käyttöön')
+        return
+      }
+
+      const response = await fetch('/api/ai/chat', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setSubscription(data.subscription)
+      } else {
+        setError('Ladataan tilaustietoja... Jos ongelma jatkuu, tarkista API-avain.')
       }
     } catch (error) {
       console.error('Failed to load subscription info:', error)
+      setError('Ladataan tilaustietoja... Jos ongelma jatkuu, tarkista API-avain.')
     }
   }
 
@@ -89,10 +104,18 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
     setError('')
 
     try {
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        setError('Kirjautuminen vaaditaan AI-ominaisuuksien käyttöön')
+        return
+      }
+
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
           carId,

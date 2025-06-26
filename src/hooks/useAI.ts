@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 interface SubscriptionInfo {
   type: 'free' | 'premium' | 'pro'
@@ -34,10 +35,19 @@ export function useAI() {
     setError('')
 
     try {
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        setError('Kirjautuminen vaaditaan AI-analyysin käyttöön')
+        setIsAnalyzing(false)
+        return null
+      }
+
       const response = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
           carId,
@@ -71,7 +81,17 @@ export function useAI() {
 
   const checkSubscription = async () => {
     try {
-      const response = await fetch('/api/ai/chat')
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        return null
+      }
+
+      const response = await fetch('/api/ai/chat', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setSubscription(data.subscription)

@@ -3,13 +3,14 @@
 -- Create user_subscriptions table if missing
 CREATE TABLE IF NOT EXISTS user_subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   subscription_type TEXT NOT NULL DEFAULT 'free' CHECK (subscription_type IN ('free', 'premium', 'pro')),
   ai_queries_used INTEGER DEFAULT 0,
   ai_queries_limit INTEGER DEFAULT 3,
   expires_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id)
 );
 
 -- Enable RLS
