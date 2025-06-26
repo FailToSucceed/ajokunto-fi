@@ -1,28 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 import { aiService } from '@/lib/ai-service'
-
-// Use anon key for token verification, service role is handled in aiService
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 export async function POST(request: NextRequest) {
   try {
     console.log('AI Chat POST request received')
     
-    // Get user ID from middleware (set by middleware after auth check)
-    const userId = request.headers.get('x-user-id')
-    console.log('User ID from middleware:', userId)
+    // Create Supabase client for route handler
+    const supabase = createRouteHandlerClient({ cookies })
     
-    if (!userId) {
-      console.log('No user ID found - middleware auth failed')
+    // Get the current user session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    console.log('Session check:', { hasSession: !!session, error: sessionError })
+    
+    if (!session?.user) {
+      console.log('No user session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    // Create user object for compatibility
-    const user = { id: userId }
+    const user = session.user
     
     console.log('User authenticated:', user.id)
 
@@ -81,17 +78,19 @@ export async function GET(request: NextRequest) {
   try {
     console.log('AI Chat GET request received')
     
-    // Get user ID from middleware (set by middleware after auth check)
-    const userId = request.headers.get('x-user-id')
-    console.log('GET User ID from middleware:', userId)
+    // Create Supabase client for route handler
+    const supabase = createRouteHandlerClient({ cookies })
     
-    if (!userId) {
-      console.log('GET No user ID found - middleware auth failed')
+    // Get the current user session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    console.log('GET Session check:', { hasSession: !!session, error: sessionError })
+    
+    if (!session?.user) {
+      console.log('GET No user session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    // Create user object for compatibility
-    const user = { id: userId }
+    const user = session.user
 
     // Get user's AI usage info
     const subscription = await aiService.checkAIUsageLimit(user.id)
