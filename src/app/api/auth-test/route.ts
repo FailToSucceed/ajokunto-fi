@@ -1,40 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   try {
     console.log('Auth test endpoint called')
     
-    // Get auth header
-    const authHeader = request.headers.get('authorization')
-    console.log('Auth header present:', !!authHeader)
+    // Create Supabase client for route handler
+    const supabase = createRouteHandlerClient({ cookies })
     
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ 
-        success: false,
-        message: 'No authorization header',
-        hasHeader: !!authHeader,
-        headerValue: authHeader?.substring(0, 20) + '...'
-      })
-    }
-
-    const token = authHeader.substring(7)
-    console.log('Token length:', token.length)
-    
-    // Verify token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token)
+    // Get the current user session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
     return NextResponse.json({ 
-      success: !error && !!user,
-      hasUser: !!user,
-      userId: user?.id,
-      error: error?.message,
-      tokenLength: token.length
+      success: !!session?.user,
+      hasSession: !!session,
+      hasUser: !!session?.user,
+      userId: session?.user?.id,
+      sessionError: sessionError?.message,
+      cookies: request.headers.get('cookie') ? 'Present' : 'Missing'
     })
 
   } catch (error: any) {
