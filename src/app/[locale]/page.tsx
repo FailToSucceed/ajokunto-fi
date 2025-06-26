@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { getCurrentUser } from '@/lib/auth'
+import { User } from '@supabase/supabase-js'
 
 export default function HomePage() {
   const t = useTranslations()
@@ -11,6 +13,29 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState('')
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function checkUser() {
+      try {
+        const currentUser = await getCurrentUser()
+        setUser(currentUser)
+        
+        // If user is logged in, redirect to dashboard
+        if (currentUser) {
+          router.push('/dashboard')
+          return
+        }
+      } catch (error) {
+        console.error('Error checking user:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkUser()
+  }, [router])
 
   const handleCarSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,6 +83,17 @@ export default function HomePage() {
     }
   }
 
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl text-gray-600">Ladataan...</div>
+      </div>
+    )
+  }
+
+  // If user is logged in, the useEffect will redirect to dashboard
+  // This return should only show for non-authenticated users
   return (
     <div className="bg-gray-50">
       <div className="container mx-auto px-4 py-16">
