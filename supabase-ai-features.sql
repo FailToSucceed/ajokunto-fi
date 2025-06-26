@@ -113,6 +113,15 @@ ALTER TABLE inspection_statistics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_schedules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_conversations ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can manage their own subscriptions" ON user_subscriptions;
+DROP POLICY IF EXISTS "Authenticated users can read car models" ON car_models;
+DROP POLICY IF EXISTS "Authenticated users can read common issues" ON common_issues;
+DROP POLICY IF EXISTS "Authenticated users can read recalls" ON recalls;
+DROP POLICY IF EXISTS "Authenticated users can read inspection stats" ON inspection_statistics;
+DROP POLICY IF EXISTS "Authenticated users can read maintenance schedules" ON maintenance_schedules;
+DROP POLICY IF EXISTS "Users can manage their own AI conversations" ON ai_conversations;
+
 -- User subscriptions - users can only see their own
 CREATE POLICY "Users can manage their own subscriptions" ON user_subscriptions
     FOR ALL USING (user_id = auth.uid());
