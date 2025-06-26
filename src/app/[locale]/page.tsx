@@ -22,11 +22,11 @@ export default function HomePage() {
         const currentUser = await getCurrentUser()
         setUser(currentUser)
         
-        // If user is logged in, redirect to dashboard
-        if (currentUser) {
-          router.push('/dashboard')
-          return
-        }
+        // TEMPORARILY DISABLED: If user is logged in, redirect to dashboard
+        // if (currentUser) {
+        //   router.push('/dashboard')
+        //   return
+        // }
       } catch (error) {
         console.error('Error checking user:', error)
       } finally {
