@@ -24,6 +24,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [showAddCar, setShowAddCar] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showCarSelection, setShowCarSelection] = useState(false)
+  const [selectionMode, setSelectionMode] = useState<'selling' | 'buying'>('selling')
 
   useEffect(() => {
     async function loadUserAndCars() {
@@ -82,6 +84,20 @@ export default function Dashboard() {
     router.push(`/?search=${encodeURIComponent(searchQuery.trim())}`)
   }
 
+  const handleCarTrading = (mode: 'selling' | 'buying') => {
+    setSelectionMode(mode)
+    setShowCarSelection(true)
+  }
+
+  const handleCarSelect = (carId: string) => {
+    router.push(`/car/${carId}`)
+  }
+
+  const handleCreateNewCar = () => {
+    setShowAddCar(true)
+    setShowCarSelection(false)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -94,6 +110,89 @@ export default function Dashboard() {
   }
 
   return (
+    <>
+      {/* Car Selection Modal */}
+      {showCarSelection && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectionMode === 'selling' ? 'Valitse myytävä auto' : 'Valitse tarkastettava auto'}
+                </h2>
+                <button
+                  onClick={() => setShowCarSelection(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <p className="text-gray-600 mb-6">
+                {selectionMode === 'selling' 
+                  ? 'Valitse auto jonka haluat myydä ja täytä sen tarkastuslista ostajaa varten.'
+                  : 'Valitse auto jota harkitset ostamaan ja käy tarkastuslista läpi myyjän kanssa.'
+                }
+              </p>
+
+              {/* Existing Cars */}
+              {cars.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Olemassa olevat autot</h3>
+                  <div className="space-y-3">
+                    {cars.map((car) => (
+                      <button
+                        key={car.id}
+                        onClick={() => handleCarSelect(car.id)}
+                        className="w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 text-left transition-colors"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-medium text-gray-900">{car.registration_number}</h4>
+                            <p className="text-sm text-gray-600">
+                              {car.make} {car.model} {car.year && `(${car.year})`}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              car.role === 'owner' ? 'bg-green-100 text-green-800' :
+                              car.role === 'contributor' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {car.role === 'owner' ? 'Omistaja' : 
+                               car.role === 'contributor' ? 'Toimittaja' : 'Lukija'}
+                            </span>
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Create New Car */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Tai luo uusi auto</h3>
+                <button
+                  onClick={handleCreateNewCar}
+                  className="w-full flex items-center justify-center space-x-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-4 px-6 rounded-lg border border-blue-200 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Lisää uusi auto tarkastuslistoineen</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 max-w-7xl py-8">
         {/* Header */}
@@ -129,23 +228,29 @@ export default function Dashboard() {
             </div>
             
             <p className="text-gray-600 mb-6">
-              Helpota auton osto- ja myyntiprosessia luotettavalla tarkastusraportoinnilla. 
-              Luo läpinäkyviä kauppoja ja vähennä ostajan ja myyjän välistä epävarmuutta.
+              Helpota auton osto- ja myyntiprosessia yhdessä tehdyllä tarkastuksella ja dokumentoinnilla. 
+              Lisää läpinäkyvyyttä ja vähemmän epävarmuutta - paremmat kaupat kaikille.
             </p>
             
             <div className="space-y-3">
-              <button className="w-full flex items-center space-x-3 bg-green-50 hover:bg-green-100 text-green-700 font-medium py-3 px-4 rounded-lg border border-green-200 transition-colors">
+              <button 
+                onClick={() => handleCarTrading('selling')}
+                className="w-full flex items-center space-x-3 bg-green-50 hover:bg-green-100 text-green-700 font-medium py-3 px-4 rounded-lg border border-green-200 transition-colors"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Myyn autoni - Luo myynti-ilmoitus</span>
+                <span>Myyn autoa - Täytä tarkastuslista</span>
               </button>
               
-              <button className="w-full flex items-center space-x-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-lg border border-blue-200 transition-colors">
+              <button 
+                onClick={() => handleCarTrading('buying')}
+                className="w-full flex items-center space-x-3 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 px-4 rounded-lg border border-blue-200 transition-colors"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <span>Ostan autoa - Etsi myyntikohteita</span>
+                <span>Ostan autoa - Käy tarkastuslista läpi</span>
               </button>
             </div>
           </div>
@@ -296,5 +401,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </>
   )
 }
