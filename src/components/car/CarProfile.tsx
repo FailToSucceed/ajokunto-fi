@@ -251,23 +251,24 @@ export default function CarProfile({ carId }: CarProfileProps) {
                   {t('checklist.title')}
                 </h2>
                 {car.userRole !== 'viewer' && (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="flex items-center space-x-1 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      <span>{saving ? 'Tallennetaan...' : 'Tallenna'}</span>
+                      <span className="hidden sm:inline">{saving ? 'Tallennetaan...' : 'Tallenna'}</span>
+                      <span className="sm:hidden">{saving ? 'Tallenna...' : 'Tallenna'}</span>
                     </button>
                     
                     <button
                       onClick={() => setShowSharing(true)}
-                      className="flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                       </svg>
                       <span>Jaa</span>
@@ -276,24 +277,26 @@ export default function CarProfile({ carId }: CarProfileProps) {
                     {car.userRole === 'owner' && (
                       <button
                         onClick={() => setShowPermissions(true)}
-                        className="flex items-center space-x-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                         </svg>
-                        <span>Käyttöoikeudet</span>
+                        <span className="hidden sm:inline">Käyttöoikeudet</span>
+                        <span className="sm:hidden">Oikeudet</span>
                       </button>
                     )}
                     
                     <button 
                       onClick={handleExportPDF}
                       disabled={exportingPDF}
-                      className="flex items-center space-x-1 px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span>{exportingPDF ? 'Viedään...' : 'Vie PDF'}</span>
+                      <span className="hidden sm:inline">{exportingPDF ? 'Viedään...' : 'Vie PDF'}</span>
+                      <span className="sm:hidden">{exportingPDF ? 'PDF...' : 'PDF'}</span>
                     </button>
                   </div>
                 )}
@@ -322,23 +325,24 @@ export default function CarProfile({ carId }: CarProfileProps) {
               {/* Bottom action buttons */}
               {car.userRole !== 'viewer' && (
                 <div className="flex justify-center">
-                  <div className="flex items-center space-x-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 w-full max-w-4xl overflow-hidden">
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="flex items-center space-x-1 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      <span>{saving ? 'Tallennetaan...' : 'Tallenna'}</span>
+                      <span className="hidden sm:inline">{saving ? 'Tallennetaan...' : 'Tallenna'}</span>
+                      <span className="sm:hidden">{saving ? 'Tallenna...' : 'Tallenna'}</span>
                     </button>
                     
                     <button
                       onClick={() => setShowSharing(true)}
-                      className="flex items-center space-x-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                       </svg>
                       <span>Jaa</span>
@@ -347,24 +351,26 @@ export default function CarProfile({ carId }: CarProfileProps) {
                     {car.userRole === 'owner' && (
                       <button
                         onClick={() => setShowPermissions(true)}
-                        className="flex items-center space-x-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors"
+                        className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                         </svg>
-                        <span>Käyttöoikeudet</span>
+                        <span className="hidden sm:inline">Käyttöoikeudet</span>
+                        <span className="sm:hidden">Oikeudet</span>
                       </button>
                     )}
                     
                     <button 
                       onClick={handleExportPDF}
                       disabled={exportingPDF}
-                      className="flex items-center space-x-1 px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-lg transition-colors"
+                      className="flex items-center space-x-1 px-2 sm:px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors min-w-0 flex-shrink-0"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span>{exportingPDF ? 'Viedään...' : 'Vie PDF'}</span>
+                      <span className="hidden sm:inline">{exportingPDF ? 'Viedään...' : 'Vie PDF'}</span>
+                      <span className="sm:hidden">{exportingPDF ? 'PDF...' : 'PDF'}</span>
                     </button>
                   </div>
                 </div>
