@@ -62,6 +62,41 @@ export class AIService {
 
     if (error) {
       console.error('RPC check_ai_usage_limit error:', error)
+      
+      // If RPC function doesn't exist, create a default subscription
+      if (error.message.includes('function') || error.code === '42883') {
+        console.log('RPC function missing, creating default subscription')
+        
+        // Try to create subscription directly
+        const { error: insertError } = await supabase
+          .from('user_subscriptions')
+          .upsert({
+            user_id: userId,
+            subscription_type: 'free',
+            ai_queries_limit: 3,
+            ai_queries_used: 0
+          })
+          
+        if (insertError) {
+          console.error('Failed to create subscription:', insertError)
+          // Return default values if everything fails
+          return {
+            type: 'free',
+            queries_used: 0,
+            queries_limit: 3,
+            can_use_ai: true
+          }
+        }
+        
+        // Return default for new subscription
+        return {
+          type: 'free',
+          queries_used: 0,
+          queries_limit: 3,
+          can_use_ai: true
+        }
+      }
+      
       throw error
     }
 
