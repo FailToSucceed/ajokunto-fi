@@ -62,23 +62,8 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
     try {
       console.log('Loading subscription info...')
       
-      // Get auth token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      console.log('Session:', { hasSession: !!session, hasToken: !!session?.access_token, error: sessionError })
-      
-      if (!session?.access_token) {
-        console.log('No session or token found')
-        setError('Kirjautuminen vaaditaan AI-ominaisuuksien käyttöön')
-        return
-      }
-
-      console.log('Making API request with token...')
-      const response = await fetch('/api/ai/chat', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      })
-      
+      // Auth is now handled by middleware, just make the request
+      const response = await fetch('/api/ai/chat')
       console.log('API response:', { status: response.status, ok: response.ok })
       
       if (response.ok) {
@@ -116,18 +101,11 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
     setError('')
 
     try {
-      // Get auth token
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        setError('Kirjautuminen vaaditaan AI-ominaisuuksien käyttöön')
-        return
-      }
-
+      // Auth is now handled by middleware, just make the request
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           carId,

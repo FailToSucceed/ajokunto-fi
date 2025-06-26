@@ -35,19 +35,11 @@ export function useAI() {
     setError('')
 
     try {
-      // Get auth token
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        setError('Kirjautuminen vaaditaan AI-analyysin käyttöön')
-        setIsAnalyzing(false)
-        return null
-      }
-
+      // Auth is now handled by middleware, just make the request
       const response = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           carId,
@@ -81,17 +73,8 @@ export function useAI() {
 
   const checkSubscription = async () => {
     try {
-      // Get auth token
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        return null
-      }
-
-      const response = await fetch('/api/ai/chat', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      })
+      // Auth is now handled by middleware, just make the request
+      const response = await fetch('/api/ai/chat')
       if (response.ok) {
         const data = await response.json()
         setSubscription(data.subscription)

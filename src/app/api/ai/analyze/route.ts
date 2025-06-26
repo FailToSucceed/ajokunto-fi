@@ -12,21 +12,17 @@ export async function POST(request: NextRequest) {
   try {
     console.log('AI Analyze POST request received')
     
-    // Get auth header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      console.log('No auth header found')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.substring(7)
+    // Get user ID from middleware (set by middleware after auth check)
+    const userId = request.headers.get('x-user-id')
+    console.log('User ID from middleware:', userId)
     
-    // Verify token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token)
-    if (error || !user) {
-      console.log('Token verification failed:', error?.message)
+    if (!userId) {
+      console.log('No user ID found - middleware auth failed')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    // Create user object for compatibility
+    const user = { id: userId }
     
     console.log('User authenticated:', user.id)
 
