@@ -45,21 +45,21 @@ export type Database = {
           id: string
           car_id: string
           user_id: string
-          role: 'owner' | 'contributor' | 'viewer'
+          role: 'owner' | 'contributor' | 'viewer' | 'holder' | 'buyer' | 'inspector' | 'mechanic' | 'other'
           created_at: string
         }
         Insert: {
           id?: string
           car_id: string
           user_id: string
-          role: 'owner' | 'contributor' | 'viewer'
+          role: 'owner' | 'contributor' | 'viewer' | 'holder' | 'buyer' | 'inspector' | 'mechanic' | 'other'
           created_at?: string
         }
         Update: {
           id?: string
           car_id?: string
           user_id?: string
-          role?: 'owner' | 'contributor' | 'viewer'
+          role?: 'owner' | 'contributor' | 'viewer' | 'holder' | 'buyer' | 'inspector' | 'mechanic' | 'other'
           created_at?: string
         }
       }

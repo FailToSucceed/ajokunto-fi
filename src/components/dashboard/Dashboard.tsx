@@ -14,7 +14,7 @@ interface Car {
   make?: string
   model?: string
   year?: number
-  role: 'owner' | 'contributor' | 'viewer'
+  role: 'owner' | 'contributor' | 'viewer' | 'holder' | 'buyer' | 'inspector' | 'mechanic' | 'other'
 }
 
 export default function Dashboard() {
@@ -27,6 +27,20 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showCarSelection, setShowCarSelection] = useState(false)
   const [selectionMode, setSelectionMode] = useState<'selling' | 'buying'>('selling')
+
+  const getRoleDisplay = (role: Car['role']) => {
+    const roleMap = {
+      owner: { label: 'Omistaja', className: 'bg-green-100 text-green-800' },
+      contributor: { label: 'Toimittaja', className: 'bg-blue-100 text-blue-800' },
+      viewer: { label: 'Lukija', className: 'bg-gray-100 text-gray-800' },
+      holder: { label: 'Haltija/käyttäjä', className: 'bg-purple-100 text-purple-800' },
+      buyer: { label: '(Mahdollinen) Ostaja', className: 'bg-orange-100 text-orange-800' },
+      inspector: { label: 'Kuntotarkastaja', className: 'bg-indigo-100 text-indigo-800' },
+      mechanic: { label: 'Korjaaja', className: 'bg-red-100 text-red-800' },
+      other: { label: 'Muu', className: 'bg-gray-100 text-gray-800' }
+    }
+    return roleMap[role] || roleMap.other
+  }
 
   useEffect(() => {
     async function loadUserAndCars() {
@@ -186,13 +200,8 @@ export default function Dashboard() {
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              car.role === 'owner' ? 'bg-green-100 text-green-800' :
-                              car.role === 'contributor' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {car.role === 'owner' ? 'Omistaja' : 
-                               car.role === 'contributor' ? 'Toimittaja' : 'Lukija'}
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleDisplay(car.role).className}`}>
+                              {getRoleDisplay(car.role).label}
                             </span>
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -341,13 +350,8 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          car.role === 'owner' ? 'bg-green-100 text-green-800' :
-                          car.role === 'contributor' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {car.role === 'owner' ? 'Omistaja' : 
-                           car.role === 'contributor' ? 'Toimittaja' : 'Lukija'}
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleDisplay(car.role).className}`}>
+                          {getRoleDisplay(car.role).label}
                         </span>
                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

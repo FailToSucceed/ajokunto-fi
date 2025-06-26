@@ -15,18 +15,28 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
     registration_number: '',
     make: '',
     model: '',
-    year: ''
+    year: '',
+    role: 'owner'
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: name === 'registration_number' ? value.toUpperCase() : value
     }))
   }
+
+  const roleOptions = [
+    { value: 'owner', label: 'Omistaja' },
+    { value: 'holder', label: 'Haltija/käyttäjä' },
+    { value: 'buyer', label: '(Mahdollinen) Ostaja' },
+    { value: 'inspector', label: 'Kuntotarkastaja' },
+    { value: 'mechanic', label: 'Korjaaja' },
+    { value: 'other', label: 'Muu' }
+  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -61,13 +71,13 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
         return
       }
 
-      // Add user permission as owner
+      // Add user permission with selected role
       const { error: permissionError } = await supabase
         .from('car_permissions')
         .insert({
           car_id: carData.id,
           user_id: userId,
-          role: 'owner'
+          role: formData.role
         })
 
       if (permissionError) {
@@ -81,7 +91,8 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
         registration_number: '',
         make: '',
         model: '',
-        year: ''
+        year: '',
+        role: 'owner'
       })
       onCarCreated(carData.id)
       onClose()
@@ -179,6 +190,27 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={loading}
               />
+            </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                Rooli autoon *
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                disabled={loading}
+              >
+                {roleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {error && (
