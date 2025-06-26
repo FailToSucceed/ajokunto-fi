@@ -11,21 +11,33 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     console.log('AI Chat POST request received')
+    console.log('Headers:', Object.fromEntries(request.headers.entries()))
     
     // Get auth header
     const authHeader = request.headers.get('authorization')
+    console.log('Auth header:', authHeader ? 'Present' : 'Missing')
+    
     if (!authHeader?.startsWith('Bearer ')) {
-      console.log('No auth header found')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.log('No valid auth header found')
+      return NextResponse.json({ 
+        error: 'Unauthorized', 
+        debug: 'No authorization header or invalid format'
+      }, { status: 401 })
     }
 
     const token = authHeader.substring(7)
+    console.log('Token length:', token.length)
     
     // Verify token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token)
+    console.log('Supabase auth result:', { user: user?.id, error: error?.message })
+    
     if (error || !user) {
       console.log('Token verification failed:', error?.message)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ 
+        error: 'Unauthorized', 
+        debug: error?.message || 'User not found'
+      }, { status: 401 })
     }
     
     console.log('User authenticated:', user.id)
@@ -83,18 +95,31 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('AI Chat GET request received')
+    
     // Get auth header
     const authHeader = request.headers.get('authorization')
+    console.log('GET Auth header:', authHeader ? 'Present' : 'Missing')
+    
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ 
+        error: 'Unauthorized',
+        debug: 'No authorization header or invalid format'
+      }, { status: 401 })
     }
 
     const token = authHeader.substring(7)
+    console.log('GET Token length:', token.length)
     
     // Verify token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token)
+    console.log('GET Supabase auth result:', { user: user?.id, error: error?.message })
+    
     if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ 
+        error: 'Unauthorized',
+        debug: error?.message || 'User not found'
+      }, { status: 401 })
     }
 
     // Get user's AI usage info
