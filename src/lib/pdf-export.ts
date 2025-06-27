@@ -34,10 +34,7 @@ export async function generateChecklistPDF(carId: string): Promise<Blob> {
   // Generate HTML content
   const htmlContent = generateHTMLContent(checklistData)
   
-  // In a real implementation, you'd use a library like puppeteer or @react-pdf/renderer
-  // For now, we'll create a simple HTML-to-PDF conversion
-  
-  // Create a blob with HTML content (this would be actual PDF generation in production)
+  // Create HTML blob that can be opened in browser and printed as PDF
   const blob = new Blob([htmlContent], { type: 'text/html' })
   
   return blob
@@ -449,7 +446,9 @@ export function downloadPDF(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = filename
+  // Change extension to .html since we're creating HTML content
+  const htmlFilename = filename.replace(/\.pdf$/i, '.html')
+  a.download = htmlFilename
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
