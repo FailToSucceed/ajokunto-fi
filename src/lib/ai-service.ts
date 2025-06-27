@@ -245,7 +245,7 @@ export class AIService {
           messages: [
             {
               role: 'system',
-              content: 'You are an expert automotive inspector and mechanic. Analyze the provided inspection data and car knowledge to provide helpful insights.'
+              content: 'You are an expert automotive inspector and mechanic. Analyze the provided inspection data and car knowledge to provide helpful insights in Finnish language. Answer in Finnish only.'
             },
             {
               role: 'user',
@@ -293,22 +293,22 @@ export class AIService {
         // Create a valid fallback response
         analysis = {
           questions: [
-            "Onko autolla tehty säännöllistä huoltoa?",
-            "Milloin viimeksi jarrut on tarkastettu?", 
-            "Onko rengaspaineet tarkastettu äskettäin?"
+            "Milloin auto on viimeksi ollut huollossa?",
+            "Onko jarrujen toiminnassa huomattu vikoja?", 
+            "Kuinka usein renkaiden kunto tarkastetaan?"
           ],
           concerns: [{
-            category: "general",
-            severity: "low",
-            description: "Tarkastustiedot näyttävät hyviltä",
-            recommendation: "Jatka säännöllistä huoltoa"
+            category: "yleinen",
+            severity: "matala",
+            description: "Tarkastetut kohdat näyttävät kunnossa olevilta",
+            recommendation: "Jatka normaalia huoltoa aikataulun mukaan"
           }],
           maintenance_suggestions: [{
-            item: "Yleistarkastus",
-            urgency: "routine",
-            estimated_cost: "100-200 EUR"
+            item: "Määräaikaishuolto",
+            urgency: "normaali",
+            estimated_cost: "150-300 EUR"
           }],
-          overall_assessment: "Auto vaikuttaa olevan kohtuullisessa kunnossa tarkastettujen kohtien perusteella. Suosittelemme säännöllistä huoltoa ja tarkastusta."
+          overall_assessment: "Auton kunto näyttää tarkastettujen kohtien perusteella hyvältä. Suosittelen jatkamaan säännöllistä huoltoa valmistajan ohjeiden mukaan."
         }
       }
 
@@ -397,25 +397,25 @@ ${JSON.stringify(context.inspection_data, null, 2)}
 Car Knowledge:
 ${context.car_knowledge ? JSON.stringify(context.car_knowledge, null, 2) : 'No specific model data available'}
 
-Please respond with JSON in this exact format:
+Please respond with JSON in this exact format in Finnish language:
 {
-  "questions": ["List of 3-5 specific follow-up questions based on missing or unclear inspection data"],
+  "questions": ["List of 3-5 specific follow-up questions in Finnish based on missing or unclear inspection data"],
   "concerns": [
     {
-      "category": "brake_system",
-      "severity": "medium",
-      "description": "Description of the concern",
-      "recommendation": "What should be done"
+      "category": "jarrujarjestelma",
+      "severity": "kohtalainen",
+      "description": "Description in Finnish of the concern",
+      "recommendation": "What should be done in Finnish"
     }
   ],
   "maintenance_suggestions": [
     {
-      "item": "Brake pads",
-      "urgency": "soon",
+      "item": "Jarrupalat",
+      "urgency": "pian",
       "estimated_cost": "200-400 EUR"
     }
   ],
-  "overall_assessment": "Brief summary of the car's condition and key recommendations"
+  "overall_assessment": "Brief summary in Finnish of the car's condition and key recommendations"
 }
 
 Focus on:
