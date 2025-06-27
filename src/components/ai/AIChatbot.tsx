@@ -104,6 +104,7 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Include cookies for authentication
         body: JSON.stringify({
           carId,
           message: inputMessage,
