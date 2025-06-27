@@ -59,23 +59,14 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
   }
 
   const loadSubscriptionInfo = async () => {
-    try {
-      console.log('Setting default subscription info...')
-      
-      // For now, set a default free subscription to allow testing
-      // In production, this should check actual subscription from database
-      setSubscription({
-        type: 'free',
-        queries_used: 0,
-        queries_limit: 3,
-        can_use_ai: true
-      })
-      
-      setError('')
-    } catch (error) {
-      console.error('Failed to load subscription info:', error)
-      setError('Virhe tilaustietojen lataamisessa.')
-    }
+    // Just set unlimited for now - no API calls
+    setSubscription({
+      type: 'free',
+      queries_used: 0,
+      queries_limit: 999,
+      can_use_ai: true
+    })
+    setError('')
   }
 
   const sendMessage = async () => {
