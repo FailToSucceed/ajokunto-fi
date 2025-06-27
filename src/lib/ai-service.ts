@@ -266,10 +266,14 @@ export class AIService {
       }
 
       const aiResponse = await response.json()
+      console.log('=== OPENAI RESPONSE START ===')
       console.log('OpenAI API response:', JSON.stringify(aiResponse, null, 2))
+      console.log('=== OPENAI RESPONSE END ===')
       
       const rawContent = aiResponse.choices[0].message.content
-      console.log('Raw AI content:', rawContent)
+      console.log('=== RAW AI CONTENT START ===')
+      console.log(rawContent)
+      console.log('=== RAW AI CONTENT END ===')
       
       let analysis
       try {
