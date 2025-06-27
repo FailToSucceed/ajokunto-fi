@@ -6,6 +6,10 @@ import { aiService } from '@/lib/ai-service'
 export async function POST(request: NextRequest) {
   try {
     console.log('AI Analyze POST request received')
+    console.log('Request headers:', {
+      cookie: request.headers.get('cookie'),
+      authorization: request.headers.get('authorization')
+    })
     
     // Create Supabase client
     const supabase = createRouteHandlerClient({ cookies })
@@ -13,11 +17,16 @@ export async function POST(request: NextRequest) {
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
+    console.log('Auth check result:', { 
+      user: user ? { id: user.id, email: user.email } : null, 
+      authError: authError?.message 
+    })
+    
     if (authError || !user) {
       console.log('Authentication failed:', authError)
       return NextResponse.json({ 
         error: 'UNAUTHORIZED',
-        message: 'Authentication required' 
+        message: 'Authentication required. Make sure you are logged in.' 
       }, { status: 401 })
     }
     
