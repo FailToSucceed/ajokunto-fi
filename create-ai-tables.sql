@@ -88,7 +88,8 @@ CREATE TABLE IF NOT EXISTS maintenance_schedules (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create RPC functions for AI usage management
+-- Create RPC functions for AI usage management (DROP IF EXISTS first)
+DROP FUNCTION IF EXISTS check_ai_usage_limit(UUID);
 CREATE OR REPLACE FUNCTION check_ai_usage_limit(user_uuid UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
@@ -115,6 +116,7 @@ BEGIN
 END;
 $$;
 
+DROP FUNCTION IF EXISTS increment_ai_usage(UUID);
 CREATE OR REPLACE FUNCTION increment_ai_usage(user_uuid UUID)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -154,31 +156,40 @@ ALTER TABLE recalls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inspection_statistics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_schedules ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies
+-- Create RLS policies (drop existing ones first to avoid conflicts)
+DROP POLICY IF EXISTS "Users can view own subscription" ON user_subscriptions;
 CREATE POLICY "Users can view own subscription" ON user_subscriptions
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own subscription" ON user_subscriptions;
 CREATE POLICY "Users can update own subscription" ON user_subscriptions
     FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can view own conversations" ON ai_conversations;
 CREATE POLICY "Users can view own conversations" ON ai_conversations
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own conversations" ON ai_conversations;
 CREATE POLICY "Users can insert own conversations" ON ai_conversations
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Car knowledge tables are read-only for all authenticated users
+DROP POLICY IF EXISTS "Authenticated users can read car models" ON car_models;
 CREATE POLICY "Authenticated users can read car models" ON car_models
     FOR SELECT USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Authenticated users can read common issues" ON common_issues;
 CREATE POLICY "Authenticated users can read common issues" ON common_issues
     FOR SELECT USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Authenticated users can read recalls" ON recalls;
 CREATE POLICY "Authenticated users can read recalls" ON recalls
     FOR SELECT USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Authenticated users can read inspection stats" ON inspection_statistics;
 CREATE POLICY "Authenticated users can read inspection stats" ON inspection_statistics
     FOR SELECT USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Authenticated users can read maintenance schedules" ON maintenance_schedules;
 CREATE POLICY "Authenticated users can read maintenance schedules" ON maintenance_schedules
     FOR SELECT USING (auth.role() = 'authenticated');

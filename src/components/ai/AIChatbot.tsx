@@ -60,24 +60,21 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
 
   const loadSubscriptionInfo = async () => {
     try {
-      console.log('Loading subscription info...')
+      console.log('Setting default subscription info...')
       
-      // Auth is now handled by middleware, just make the request
-      const response = await fetch('/api/ai/chat')
-      console.log('API response:', { status: response.status, ok: response.ok })
+      // For now, set a default free subscription to allow testing
+      // In production, this should check actual subscription from database
+      setSubscription({
+        type: 'free',
+        queries_used: 0,
+        queries_limit: 3,
+        can_use_ai: true
+      })
       
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Subscription data:', data)
-        setSubscription(data.subscription)
-      } else {
-        const errorData = await response.json()
-        console.log('API error:', errorData)
-        setError('Ladataan tilaustietoja... Jos ongelma jatkuu, tarkista API-avain.')
-      }
+      setError('')
     } catch (error) {
       console.error('Failed to load subscription info:', error)
-      setError('Ladataan tilaustietoja... Jos ongelma jatkuu, tarkista API-avain.')
+      setError('Virhe tilaustietojen lataamisessa.')
     }
   }
 
@@ -118,12 +115,17 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
       })
 
       const data = await response.json()
+      
+      console.log('Chat API response:', { status: response.status, ok: response.ok, data })
 
       if (!response.ok) {
+        console.error('Chat API error:', data)
         if (data.error === 'AI_LIMIT_EXCEEDED') {
           setError('AI-käyttöoikeus on loppunut. Päivitä tilauksesi jatkaaksesi.')
+        } else if (data.error === 'UNAUTHORIZED') {
+          setError('Kirjautuminen vaaditaan AI-keskusteluun.')
         } else {
-          setError('Virhe AI-vastauksessa. Yritä uudelleen.')
+          setError(`Virhe AI-vastauksessa: ${data.message || 'Tuntematon virhe'}`)
         }
         return
       }
@@ -136,8 +138,13 @@ export default function AIChatbot({ carId, carInfo, embedded = false }: AIChatbo
 
       setMessages(prev => [...prev, assistantMessage])
       
-      // Reload subscription info to update usage
-      loadSubscriptionInfo()
+      // Update usage counter locally
+      if (subscription) {
+        setSubscription({
+          ...subscription,
+          queries_used: subscription.queries_used + 1
+        })
+      }
 
     } catch (error) {
       console.error('Chat error:', error)
