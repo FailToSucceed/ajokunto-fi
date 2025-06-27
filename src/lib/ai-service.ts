@@ -277,14 +277,36 @@ export class AIService {
       
       let analysis
       try {
-        analysis = JSON.parse(rawContent)
+        // Try to extract JSON from the response - OpenAI might include extra text
+        let jsonContent = rawContent.trim()
+        
+        // Look for JSON object markers
+        const jsonStart = jsonContent.indexOf('{')
+        const jsonEnd = jsonContent.lastIndexOf('}')
+        
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          jsonContent = jsonContent.substring(jsonStart, jsonEnd + 1)
+        }
+        
+        console.log('CLEANED JSON CONTENT:', jsonContent)
+        analysis = JSON.parse(jsonContent)
+        
       } catch (parseError) {
         console.error('JSON PARSE ERROR:', parseError.message)
-        console.error('RAW CONTENT LENGTH:', rawContent?.length || 'undefined')
-        console.error('RAW CONTENT FIRST 200 CHARS:', rawContent?.substring(0, 200) || 'undefined')
+        console.error('RAW CONTENT:', rawContent)
         
-        // Send debug info back in error  
-        throw new Error(`JSON parsing failed. Content length: ${rawContent?.length}, First 200 chars: ${rawContent?.substring(0, 200)}`)
+        // Create a fallback response if JSON parsing fails
+        analysis = {
+          questions: [`OpenAI vastasi mutta JSON-parsing epäonnistui. Vastauksen pituus: ${rawContent?.length} merkkiä.`],
+          concerns: [{
+            category: "system",
+            severity: "low", 
+            description: "AI-vastauksen muotoilu oli virheellinen",
+            recommendation: "JSON-parsing epäonnistui - tarkista OpenAI:n vastausmuoto"
+          }],
+          maintenance_suggestions: [],
+          overall_assessment: `AI vastasi mutta vastaus ei ollut oikeassa JSON-muodossa. Ensimmäiset 200 merkkiä: ${rawContent?.substring(0, 200)}`
+        }
       }
 
       // Save conversation to database
