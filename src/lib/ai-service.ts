@@ -266,65 +266,9 @@ export class AIService {
       }
 
       const aiResponse = await response.json()
-      console.log('=== OPENAI RESPONSE START ===')
-      console.log('OpenAI API response:', JSON.stringify(aiResponse, null, 2))
-      console.log('=== OPENAI RESPONSE END ===')
-      
-      const rawContent = aiResponse.choices[0].message.content
-      console.log('=== RAW AI CONTENT START ===')
-      console.log(rawContent)
-      console.log('=== RAW AI CONTENT END ===')
-      
-      let analysis
-      try {
-        // Try to extract JSON from the response - OpenAI might include extra text
-        let jsonContent = rawContent.trim()
-        
-        // Look for JSON object markers
-        const jsonStart = jsonContent.indexOf('{')
-        const jsonEnd = jsonContent.lastIndexOf('}')
-        
-        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-          jsonContent = jsonContent.substring(jsonStart, jsonEnd + 1)
-        }
-        
-        console.log('CLEANED JSON CONTENT:', jsonContent)
-        analysis = JSON.parse(jsonContent)
-        
-      } catch (parseError) {
-        console.error('JSON PARSE ERROR:', parseError.message)
-        console.error('RAW CONTENT:', rawContent)
-        
-        // Create a fallback response if JSON parsing fails
-        analysis = {
-          questions: ["Analyysi epäonnistui teknisen virheen vuoksi."],
-          concerns: [{
-            category: "system",
-            severity: "low",
-            description: "AI-analyysi ei onnistunut",
-            recommendation: "Yritä uudelleen tai tarkista tiedot manuaalisesti"
-          }],
-          maintenance_suggestions: [],
-          overall_assessment: "Tekninen virhe AI-analyysissä. Tarkastustiedot näyttävät olevan kunnossa."
-        }
-      }
+      const analysis = JSON.parse(aiResponse.choices[0].message.content)
 
-      // Save conversation to database (skip for test users)
-      if (!request.userId.startsWith('test-user-')) {
-        try {
-          await supabase.from('ai_conversations').insert({
-            user_id: request.userId,
-            car_id: request.carId,
-            conversation_type: 'analysis',
-            input_data: context,
-            ai_response: analysis,
-            tokens_used: aiResponse.usage?.total_tokens || 0
-          })
-        } catch (dbError) {
-          console.error('Failed to save conversation to DB:', dbError)
-          // Don't throw error - analysis worked
-        }
-      }
+      // Skip saving analysis for now
 
       // Increment usage counter
       await this.incrementAIUsage(request.userId)
@@ -352,7 +296,6 @@ export class AIService {
       throw new Error('AI usage limit exceeded. Please upgrade your subscription.')
     }
 
-    // Simple system prompt for all users
     const systemPrompt = `You are Kimi-Mika, a friendly Finnish automotive expert and summer intern. Answer car-related questions helpfully and accurately in Finnish. Keep responses concise but informative.`
 
     try {
@@ -386,6 +329,8 @@ export class AIService {
 
       const aiResponse = await response.json()
       const reply = aiResponse.choices[0].message.content
+
+      // Skip saving conversation for now
 
       // Increment usage
       await this.incrementAIUsage(userId)
