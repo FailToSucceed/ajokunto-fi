@@ -279,21 +279,12 @@ export class AIService {
       try {
         analysis = JSON.parse(rawContent)
       } catch (parseError) {
-        console.error('Failed to parse AI response as JSON:', parseError)
-        console.error('Raw content was:', rawContent)
+        console.error('JSON PARSE ERROR:', parseError.message)
+        console.error('RAW CONTENT LENGTH:', rawContent?.length || 'undefined')
+        console.error('RAW CONTENT FIRST 200 CHARS:', rawContent?.substring(0, 200) || 'undefined')
         
-        // Create a fallback response if JSON parsing fails
-        analysis = {
-          questions: ["Analyysi epäonnistui teknisen virheen vuoksi."],
-          concerns: [{
-            category: "system",
-            severity: "low",
-            description: "AI-analyysi ei onnistunut",
-            recommendation: "Yritä uudelleen tai tarkista tiedot manuaalisesti"
-          }],
-          maintenance_suggestions: [],
-          overall_assessment: "Tekninen virhe AI-analyysissä. Tarkastustiedot näyttävät olevan kunnossa."
-        }
+        // Send debug info back in error  
+        throw new Error(`JSON parsing failed. Content length: ${rawContent?.length}, First 200 chars: ${rawContent?.substring(0, 200)}`)
       }
 
       // Save conversation to database
