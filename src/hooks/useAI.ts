@@ -52,11 +52,10 @@ export function useAI() {
       const data = await response.json()
 
       if (!response.ok) {
-        console.error('AI Analysis API error:', data)
         if (data.error === 'AI_LIMIT_EXCEEDED') {
-          setError('AI-käyttöoikeus on loppunut. Päivitä tilauksesi jatkaaksesi.')
+          setError('AI-käyttöoikeus on loppunut. Päivitä tilauksesi jatkauksesi.')
         } else {
-          setError(`AI-analyysi epäonnistui: ${data.message || JSON.stringify(data)}`)
+          setError('AI-analyysi epäonnistui. Yritä uudelleen.')
         }
         return null
       }
