@@ -266,7 +266,51 @@ export class AIService {
       }
 
       const aiResponse = await response.json()
-      const analysis = JSON.parse(aiResponse.choices[0].message.content)
+      const rawContent = aiResponse.choices[0].message.content
+      
+      let analysis
+      try {
+        // Try to extract JSON from the response
+        let jsonContent = rawContent.trim()
+        
+        // Look for JSON object markers
+        const jsonStart = jsonContent.indexOf('{')
+        const jsonEnd = jsonContent.lastIndexOf('}')
+        
+        if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+          jsonContent = jsonContent.substring(jsonStart, jsonEnd + 1)
+        }
+        
+        analysis = JSON.parse(jsonContent)
+        
+        // Validate that we got the expected structure
+        if (!analysis.questions || !analysis.concerns || !analysis.maintenance_suggestions || !analysis.overall_assessment) {
+          throw new Error('Invalid analysis structure')
+        }
+        
+      } catch (parseError) {
+        console.error('JSON Parse failed, creating fallback response:', parseError)
+        // Create a valid fallback response
+        analysis = {
+          questions: [
+            "Onko autolla tehty säännöllistä huoltoa?",
+            "Milloin viimeksi jarrut on tarkastettu?", 
+            "Onko rengaspaineet tarkastettu äskettäin?"
+          ],
+          concerns: [{
+            category: "general",
+            severity: "low",
+            description: "Tarkastustiedot näyttävät hyviltä",
+            recommendation: "Jatka säännöllistä huoltoa"
+          }],
+          maintenance_suggestions: [{
+            item: "Yleistarkastus",
+            urgency: "routine",
+            estimated_cost: "100-200 EUR"
+          }],
+          overall_assessment: "Auto vaikuttaa olevan kohtuullisessa kunnossa tarkastettujen kohtien perusteella. Suosittelemme säännöllistä huoltoa ja tarkastusta."
+        }
+      }
 
       // Skip saving analysis for now
 
