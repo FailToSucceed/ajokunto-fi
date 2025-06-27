@@ -17,6 +17,7 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
     make: '',
     model: '',
     year: '',
+    mileage: '',
     role: 'owner'
   })
   const [loading, setLoading] = useState(false)
@@ -68,7 +69,8 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
           registration_number: formData.registration_number.trim(),
           make: formData.make.trim() || null,
           model: formData.model.trim() || null,
-          year: formData.year ? parseInt(formData.year) : null
+          year: formData.year ? parseInt(formData.year) : null,
+          mileage: formData.mileage ? parseInt(formData.mileage) : null
         })
         .select()
         .single()
@@ -103,6 +105,7 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
         make: '',
         model: '',
         year: '',
+        mileage: '',
         role: 'owner'
       })
       onCarCreated(carData.id)
@@ -198,6 +201,24 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
                 placeholder="2020"
                 min="1900"
                 max="2030"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="mileage" className="block text-sm font-medium text-gray-700 mb-1">
+                Matkamittarin lukema (km)
+              </label>
+              <input
+                type="number"
+                id="mileage"
+                name="mileage"
+                value={formData.mileage}
+                onChange={handleInputChange}
+                placeholder="120000"
+                min="0"
+                max="999999"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={loading}
               />

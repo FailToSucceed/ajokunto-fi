@@ -9,6 +9,7 @@ import { User } from '@supabase/supabase-js'
 import ChecklistSection from './ChecklistSection'
 import PermissionsManager from './PermissionsManager'
 import SharingModal from './SharingModal'
+import MaintenanceRecords from './MaintenanceRecords'
 import AIChatbot from '../ai/AIChatbot'
 import AIAnalysisResults from '../ai/AIAnalysisResults'
 import { generateChecklistPDF, downloadPDF } from '@/lib/pdf-export'
@@ -21,6 +22,7 @@ interface Car {
   make?: string
   model?: string
   year?: number
+  mileage?: number
   created_at: string
   userRole?: 'owner' | 'contributor' | 'viewer'
 }
@@ -200,6 +202,12 @@ export default function CarProfile({ carId }: CarProfileProps) {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Vuosimalli</label>
                     <div className="mt-1 text-gray-900">{car.year}</div>
+                  </div>
+                )}
+                {car.mileage && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Matkamittarin lukema</label>
+                    <div className="mt-1 text-gray-900">{car.mileage.toLocaleString('fi-FI')} km</div>
                   </div>
                 )}
                 <div>
@@ -501,14 +509,10 @@ export default function CarProfile({ carId }: CarProfileProps) {
 
 
           {activeTab === 'maintenance' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                {t('car.maintenanceRecords')}
-              </h2>
-              <div className="bg-white rounded-lg shadow p-6">
-                <p className="text-gray-500">Huoltohistoria tulossa pian...</p>
-              </div>
-            </div>
+            <MaintenanceRecords 
+              carId={carId} 
+              canEdit={car.userRole === 'owner' || car.userRole === 'contributor'} 
+            />
           )}
 
           {activeTab === 'suggested' && (

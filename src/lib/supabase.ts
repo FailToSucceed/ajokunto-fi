@@ -15,6 +15,7 @@ export type Database = {
           make?: string
           model?: string
           year?: number
+          mileage?: number
           created_at: string
           updated_at: string
           created_by: string
@@ -25,6 +26,7 @@ export type Database = {
           make?: string
           model?: string
           year?: number
+          mileage?: number
           created_at?: string
           updated_at?: string
           created_by: string
@@ -35,6 +37,7 @@ export type Database = {
           make?: string
           model?: string
           year?: number
+          mileage?: number
           created_at?: string
           updated_at?: string
           created_by?: string
