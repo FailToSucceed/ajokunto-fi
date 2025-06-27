@@ -214,6 +214,8 @@ export class AIService {
     const prompt = this.createAnalysisPrompt(context)
 
     try {
+      console.log('Making OpenAI API call for analysis...')
+      
       // Call OpenAI API
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -238,8 +240,12 @@ export class AIService {
         })
       })
 
+      console.log('OpenAI API response status:', response.status, response.statusText)
+
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('OpenAI API error response:', errorText)
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
       }
 
       const aiResponse = await response.json()
@@ -310,6 +316,8 @@ Car: ${car.make} ${car.model} ${car.year}
 Registration: ${car.registration_number}`
 
     try {
+      console.log('Making OpenAI API call for chat...')
+      
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -328,8 +336,12 @@ Registration: ${car.registration_number}`
         })
       })
 
+      console.log('OpenAI API chat response status:', response.status, response.statusText)
+
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('OpenAI API chat error response:', errorText)
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`)
       }
 
       const aiResponse = await response.json()

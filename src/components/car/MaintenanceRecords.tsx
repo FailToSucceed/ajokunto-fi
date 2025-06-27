@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getCurrentUser } from '@/lib/auth'
 import MediaUpload from '@/components/ui/MediaUpload'
+import { uploadCarMedia } from '@/lib/storage'
 
 interface MaintenanceRecord {
   id: string
@@ -35,6 +36,8 @@ export default function MaintenanceRecords({ carId, canEdit }: MaintenanceRecord
     cost: ''
   })
   const [saving, setSaving] = useState(false)
+  const [uploadingReceipt, setUploadingReceipt] = useState(false)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
 
   useEffect(() => {
     loadMaintenanceRecords()
@@ -69,7 +72,8 @@ export default function MaintenanceRecords({ carId, canEdit }: MaintenanceRecord
       const user = await getCurrentUser()
       if (!user) return
 
-      const { error } = await supabase
+      // First, create the maintenance record
+      const { data: maintenanceRecord, error } = await supabase
         .from('maintenance_records')
         .insert({
           car_id: carId,
@@ -80,27 +84,46 @@ export default function MaintenanceRecords({ carId, canEdit }: MaintenanceRecord
           cost: formData.cost ? parseFloat(formData.cost) : null,
           created_by: user.id
         })
+        .select()
+        .single()
 
       if (error) {
         console.error('Error saving maintenance record:', error)
         alert('Huoltotiedon tallentaminen epäonnistui')
-      } else {
-        // Reset form
-        setFormData({
-          type: '',
-          date: '',
-          mileage: '',
-          notes: '',
-          cost: ''
-        })
-        setShowAddForm(false)
-        loadMaintenanceRecords()
+        return
       }
+
+      // If there's a receipt file, upload it
+      if (receiptFile && maintenanceRecord) {
+        setUploadingReceipt(true)
+        try {
+          const mediaData = await uploadCarMedia(carId, receiptFile, undefined, maintenanceRecord.id)
+          console.log('Receipt uploaded successfully:', mediaData)
+        } catch (uploadError) {
+          console.error('Error uploading receipt:', uploadError)
+          alert('Kuitin lataus epäonnistui, mutta huoltotieto tallennettiin')
+        }
+        setUploadingReceipt(false)
+      }
+
+      // Reset form
+      setFormData({
+        type: '',
+        date: '',
+        mileage: '',
+        notes: '',
+        cost: ''
+      })
+      setReceiptFile(null)
+      setShowAddForm(false)
+      loadMaintenanceRecords()
+
     } catch (error) {
       console.error('Error:', error)
       alert('Huoltotiedon tallentaminen epäonnistui')
     } finally {
       setSaving(false)
+      setUploadingReceipt(false)
     }
   }
 
@@ -297,6 +320,23 @@ export default function MaintenanceRecords({ carId, canEdit }: MaintenanceRecord
                   />
                 </div>
 
+                <div>
+                  <label htmlFor="receipt" className="block text-sm font-medium text-gray-700 mb-1">
+                    Kuitti (valinnainen)
+                  </label>
+                  <input
+                    type="file"
+                    id="receipt"
+                    accept="image/*,.pdf"
+                    onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    disabled={saving}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Lataa kuva kuitista tai PDF-tiedosto. Maksimikoko 10MB.
+                  </p>
+                </div>
+
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
@@ -309,9 +349,9 @@ export default function MaintenanceRecords({ carId, canEdit }: MaintenanceRecord
                   <button
                     type="submit"
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
-                    disabled={saving}
+                    disabled={saving || uploadingReceipt}
                   >
-                    {saving ? 'Tallennetaan...' : 'Tallenna'}
+                    {saving ? 'Tallennetaan...' : uploadingReceipt ? 'Ladataan kuittiä...' : 'Tallenna'}
                   </button>
                 </div>
               </form>
