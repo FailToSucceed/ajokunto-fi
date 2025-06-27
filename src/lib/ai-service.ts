@@ -266,7 +266,31 @@ export class AIService {
       }
 
       const aiResponse = await response.json()
-      const analysis = JSON.parse(aiResponse.choices[0].message.content)
+      console.log('OpenAI API response:', JSON.stringify(aiResponse, null, 2))
+      
+      const rawContent = aiResponse.choices[0].message.content
+      console.log('Raw AI content:', rawContent)
+      
+      let analysis
+      try {
+        analysis = JSON.parse(rawContent)
+      } catch (parseError) {
+        console.error('Failed to parse AI response as JSON:', parseError)
+        console.error('Raw content was:', rawContent)
+        
+        // Create a fallback response if JSON parsing fails
+        analysis = {
+          questions: ["Analyysi epäonnistui teknisen virheen vuoksi."],
+          concerns: [{
+            category: "system",
+            severity: "low",
+            description: "AI-analyysi ei onnistunut",
+            recommendation: "Yritä uudelleen tai tarkista tiedot manuaalisesti"
+          }],
+          maintenance_suggestions: [],
+          overall_assessment: "Tekninen virhe AI-analyysissä. Tarkastustiedot näyttävät olevan kunnossa."
+        }
+      }
 
       // Save conversation to database
       await supabase.from('ai_conversations').insert({
