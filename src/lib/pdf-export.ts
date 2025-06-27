@@ -66,12 +66,24 @@ async function gatherChecklistData(carId: string): Promise<ChecklistData> {
     .eq('car_id', carId)
     .order('created_at', { ascending: true })
 
-  // Group checklist items by section
-  const sections = CHECKLIST_SECTIONS.map(section => ({
-    section: section.key,
-    title: section.title,
-    items: (checklistItems || []).filter(item => item.section === section.key)
-  }))
+  // Group checklist items by section and sort by status
+  const sections = CHECKLIST_SECTIONS.map(section => {
+    const sectionItems = (checklistItems || []).filter(item => item.section === section.key)
+    
+    // Sort items by status: issue (ongelma) first, warning (huomio) second, ok third, then no status
+    const sortedItems = sectionItems.sort((a, b) => {
+      const statusOrder = { 'issue': 0, 'warning': 1, 'ok': 2, null: 3 }
+      const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 3
+      const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 3
+      return aOrder - bOrder
+    })
+    
+    return {
+      section: section.key,
+      title: section.title,
+      items: sortedItems
+    }
+  })
 
   return {
     car: carData,
@@ -80,9 +92,48 @@ async function gatherChecklistData(carId: string): Promise<ChecklistData> {
   }
 }
 
+function calculateSummaryStats(data: ChecklistData) {
+  let totalOk = 0
+  let totalWarning = 0
+  let totalIssue = 0
+  let totalChecked = 0
+  let totalItems = 0
+
+  data.sections.forEach(section => {
+    section.items.forEach(item => {
+      totalItems++
+      if (item.status) {
+        totalChecked++
+        if (item.status === 'ok') totalOk++
+        else if (item.status === 'warning') totalWarning++
+        else if (item.status === 'issue') totalIssue++
+      }
+    })
+  })
+
+  const completionPercentage = totalItems > 0 ? Math.round((totalChecked / totalItems) * 100) : 0
+  const okPercentage = totalChecked > 0 ? Math.round((totalOk / totalChecked) * 100) : 0
+  const warningPercentage = totalChecked > 0 ? Math.round((totalWarning / totalChecked) * 100) : 0
+  const issuePercentage = totalChecked > 0 ? Math.round((totalIssue / totalChecked) * 100) : 0
+
+  return {
+    totalOk,
+    totalWarning,
+    totalIssue,
+    totalChecked,
+    totalItems,
+    completionPercentage,
+    okPercentage,
+    warningPercentage,
+    issuePercentage
+  }
+}
 
 function generateHTMLContent(data: ChecklistData): string {
   const currentDate = new Date().toLocaleDateString('fi-FI')
+  
+  // Calculate summary statistics
+  const summary = calculateSummaryStats(data)
   
   return `
 <!DOCTYPE html>
@@ -205,6 +256,67 @@ function generateHTMLContent(data: ChecklistData): string {
             height: 50px;
             margin: 20px 0 10px 0;
         }
+        .summary-section {
+            background: #f8f9fa;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .stat-ok { color: #28a745; }
+        .stat-warning { color: #ffc107; }
+        .stat-issue { color: #dc3545; }
+        .stat-total { color: #007bff; }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        .progress-segment {
+            height: 100%;
+            float: left;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .progress-ok { background-color: #28a745; }
+        .progress-warning { background-color: #ffc107; }
+        .progress-issue { background-color: #dc3545; }
+        .completion-badge {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
         @media print {
             body {
                 max-width: none;
@@ -230,6 +342,49 @@ function generateHTMLContent(data: ChecklistData): string {
         ${data.car.make ? `<p><strong>Merkki:</strong> ${data.car.make}</p>` : ''}
         ${data.car.model ? `<p><strong>Malli:</strong> ${data.car.model}</p>` : ''}
         ${data.car.year ? `<p><strong>Vuosimalli:</strong> ${data.car.year}</p>` : ''}
+    </div>
+
+    <div class="summary-section">
+        <h3>📊 Tarkastuksen yhteenveto</h3>
+        
+        <div class="completion-badge">
+            Tarkastusaste: ${summary.completionPercentage}% (${summary.totalChecked}/${summary.totalItems} kohtaa)
+        </div>
+        
+        <div class="summary-stats">
+            <div class="stat-item">
+                <div class="stat-number stat-issue">${summary.totalIssue}</div>
+                <div class="stat-label">Ongelma</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number stat-warning">${summary.totalWarning}</div>
+                <div class="stat-label">Huomio</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number stat-ok">${summary.totalOk}</div>
+                <div class="stat-label">OK</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number stat-total">${summary.totalChecked}</div>
+                <div class="stat-label">Tarkastettu</div>
+            </div>
+        </div>
+        
+        ${summary.totalChecked > 0 ? `
+        <div class="progress-bar">
+            ${summary.issuePercentage > 0 ? `<div class="progress-segment progress-issue" style="width: ${summary.issuePercentage}%">${summary.issuePercentage > 10 ? summary.issuePercentage + '%' : ''}</div>` : ''}
+            ${summary.warningPercentage > 0 ? `<div class="progress-segment progress-warning" style="width: ${summary.warningPercentage}%">${summary.warningPercentage > 10 ? summary.warningPercentage + '%' : ''}</div>` : ''}
+            ${summary.okPercentage > 0 ? `<div class="progress-segment progress-ok" style="width: ${summary.okPercentage}%">${summary.okPercentage > 10 ? summary.okPercentage + '%' : ''}</div>` : ''}
+        </div>
+        ` : ''}
+        
+        <p style="font-size: 14px; color: #666; margin-top: 15px;">
+            <strong>Tulkinta:</strong> 
+            ${summary.totalIssue > 0 ? '🔴 Löytyi ongelmia jotka vaativat huomiota.' : 
+              summary.totalWarning > 0 ? '🟡 Muutamia huomioita, mutta ei vakavia ongelmia.' : 
+              summary.totalOk > 0 ? '🟢 Tarkastetut kohdat ovat kunnossa.' : 
+              '⚪ Tarkastus kesken.'}
+        </p>
     </div>
 
     ${data.sections.map(section => `
