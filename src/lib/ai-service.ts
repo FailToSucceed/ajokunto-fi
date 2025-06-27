@@ -352,21 +352,39 @@ export class AIService {
       throw new Error('AI usage limit exceeded. Please upgrade your subscription.')
     }
 
-    // Get car and inspection data
-    const { data: car } = await supabase
-      .from('cars')
-      .select(`
-        *,
-        checklist_items(*),
-        maintenance_records(*)
-      `)
-      .eq('id', carId)
-      .single()
+    // For test users, use simplified context
+    let car = null
+    let carKnowledge = null
+    let systemPrompt = `You are Kimi-Mika, a friendly Finnish automotive expert and summer intern. Answer car-related questions helpfully in Finnish. Keep responses concise but informative.`
 
-    if (!car) throw new Error('Car not found')
+    if (!userId.startsWith('test-user-')) {
+      try {
+        // Get car and inspection data for real users
+        const { data: carData } = await supabase
+          .from('cars')
+          .select(`
+            *,
+            checklist_items(*),
+            maintenance_records(*)
+          `)
+          .eq('id', carId)
+          .single()
 
-    // Get car knowledge
-    const carKnowledge = await this.getCarKnowledge(car.make, car.model, car.year)
+        if (carData) {
+          car = carData
+          // Get car knowledge
+          carKnowledge = await this.getCarKnowledge(car.make, car.model, car.year)
+          
+          systemPrompt = `You are Kimi-Mika, a friendly Finnish automotive expert and summer intern. You have access to this car's inspection data and known issues for this model. Answer the user's questions helpfully in Finnish. Keep responses concise but informative.
+
+Car: ${car.make} ${car.model} ${car.year}
+Registration: ${car.registration_number}`
+        }
+      } catch (dbError) {
+        console.error('Failed to load car data for chat:', dbError)
+        // Continue with simplified context
+      }
+    }
 
     // Prepare context
     const context = {
@@ -374,11 +392,6 @@ export class AIService {
       car_knowledge: carKnowledge,
       current_question: message
     }
-
-    const systemPrompt = `You are an expert automotive advisor. You have access to this car's inspection data and known issues for this model. Answer the user's questions helpfully and accurately. Keep responses concise but informative.
-
-Car: ${car.make} ${car.model} ${car.year}
-Registration: ${car.registration_number}`
 
     try {
       console.log('Making OpenAI API call for chat...')
