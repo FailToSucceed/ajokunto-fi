@@ -352,46 +352,8 @@ export class AIService {
       throw new Error('AI usage limit exceeded. Please upgrade your subscription.')
     }
 
-    // For test users, use simplified context
-    let car = null
-    let carKnowledge = null
-    let systemPrompt = `You are Kimi-Mika, a friendly Finnish automotive expert and summer intern. Answer car-related questions helpfully in Finnish. Keep responses concise but informative.`
-
-    if (!userId.startsWith('test-user-')) {
-      try {
-        // Get car and inspection data for real users
-        const { data: carData } = await supabase
-          .from('cars')
-          .select(`
-            *,
-            checklist_items(*),
-            maintenance_records(*)
-          `)
-          .eq('id', carId)
-          .single()
-
-        if (carData) {
-          car = carData
-          // Get car knowledge
-          carKnowledge = await this.getCarKnowledge(car.make, car.model, car.year)
-          
-          systemPrompt = `You are Kimi-Mika, a friendly Finnish automotive expert and summer intern. You have access to this car's inspection data and known issues for this model. Answer the user's questions helpfully in Finnish. Keep responses concise but informative.
-
-Car: ${car.make} ${car.model} ${car.year}
-Registration: ${car.registration_number}`
-        }
-      } catch (dbError) {
-        console.error('Failed to load car data for chat:', dbError)
-        // Continue with simplified context
-      }
-    }
-
-    // Prepare context
-    const context = {
-      car_info: car,
-      car_knowledge: carKnowledge,
-      current_question: message
-    }
+    // Simple system prompt for all users
+    const systemPrompt = `You are Kimi-Mika, a friendly Finnish automotive expert and summer intern. Answer car-related questions helpfully and accurately in Finnish. Keep responses concise but informative.`
 
     try {
       console.log('Making OpenAI API call for chat...')
@@ -424,23 +386,6 @@ Registration: ${car.registration_number}`
 
       const aiResponse = await response.json()
       const reply = aiResponse.choices[0].message.content
-
-      // Save conversation (skip for test users)
-      if (!userId.startsWith('test-user-')) {
-        try {
-          await supabase.from('ai_conversations').insert({
-            user_id: userId,
-            car_id: carId,
-            conversation_type: 'chat',
-            input_data: { message, context },
-            ai_response: { reply },
-            tokens_used: aiResponse.usage?.total_tokens || 0
-          })
-        } catch (dbError) {
-          console.error('Failed to save chat to DB:', dbError)
-          // Don't throw error - chat worked
-        }
-      }
 
       // Increment usage
       await this.incrementAIUsage(userId)
