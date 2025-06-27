@@ -50,6 +50,13 @@ export async function createShareLink(
       created_by: user.id
     })
 
+    // First check if table exists and we can connect
+    const { count, error: countError } = await supabase
+      .from('shared_checklists')
+      .select('*', { count: 'exact', head: true })
+
+    console.log('Table check result:', { count, countError })
+
     const { data, error } = await supabase
       .from('shared_checklists')
       .insert({
@@ -64,6 +71,7 @@ export async function createShareLink(
 
     if (error) {
       console.error('Supabase error creating share link:', error)
+      console.error('Error details:', error.message, error.code, error.details)
       return null
     }
 
@@ -116,26 +124,43 @@ export async function deleteShareLink(shareId: string): Promise<boolean> {
 
 export async function validateShareToken(token: string): Promise<ShareLink | null> {
   try {
+    console.log('Validating share token:', token)
+    
     const { data, error } = await supabase
       .from('shared_checklists')
       .select('*')
       .eq('share_token', token)
       .single()
 
-    if (error || !data) {
+    console.log('Share token validation result:', { data, error })
+
+    if (error) {
+      console.error('Supabase error validating token:', error)
+      return null
+    }
+
+    if (!data) {
+      console.log('No share data found for token:', token)
       return null
     }
 
     // Check if expired
     if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      console.log('Share link expired:', data.expires_at)
       return null
     }
 
+    console.log('Share link valid, incrementing access count')
+    
     // Increment access count
-    await supabase
+    const { error: updateError } = await supabase
       .from('shared_checklists')
       .update({ accessed_count: data.accessed_count + 1 })
       .eq('id', data.id)
+
+    if (updateError) {
+      console.error('Error updating access count:', updateError)
+    }
 
     return data
   } catch (error) {

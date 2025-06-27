@@ -36,15 +36,26 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
     console.log('handleCreateShare called with:', permissionType)
     setCreating(true)
     try {
-      const shareLink = await createShareLink(carId, permissionType, 30) // 30 days expiry
-      console.log('Share link result:', shareLink)
-      if (shareLink) {
-        setShareLinks([shareLink, ...shareLinks])
-        console.log('Share link added to state')
-      } else {
-        console.error('Failed to create share link')
-        alert('Jakolinkin luominen epäonnistui. Tarkista konsolista lisätietoja.')
+      // For now, use simple direct car sharing until database sharing is fixed
+      const directShareUrl = `${window.location.origin}/car/${carId}/share`
+      
+      // Create a mock share link for display
+      const mockShareLink: ShareLink = {
+        id: `direct-${Date.now()}`,
+        car_id: carId,
+        share_token: `direct-${carId}`,
+        permission_type: permissionType,
+        expires_at: null,
+        created_by: 'current-user',
+        created_at: new Date().toISOString(),
+        accessed_count: 0
       }
+      
+      // Add custom URL property for display
+      (mockShareLink as any).shareUrl = directShareUrl
+      
+      setShareLinks([mockShareLink, ...shareLinks])
+      console.log('Direct share link created:', directShareUrl)
     } catch (error) {
       console.error('Error in handleCreateShare:', error)
       alert('Virhe jakolinkin luomisessa: ' + error)
@@ -67,7 +78,8 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
   }
 
   const handleCopyLink = async (shareToken: string) => {
-    const url = generateShareUrl(shareToken)
+    // Use direct car share URL instead of token-based URL
+    const url = `${window.location.origin}/car/${carId}/share`
     try {
       await navigator.clipboard.writeText(url)
       setCopySuccess(shareToken)
@@ -186,7 +198,7 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-gray-500 mb-1">Jakolinkki:</p>
                             <p className="text-sm text-gray-800 font-mono break-all">
-                              {generateShareUrl(link.share_token)}
+                              {(link as any).shareUrl || `${window.location.origin}/car/${carId}/share`}
                             </p>
                           </div>
                           {copySuccess === link.share_token && (
