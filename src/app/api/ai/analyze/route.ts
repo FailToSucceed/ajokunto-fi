@@ -7,9 +7,19 @@ export async function POST(request: NextRequest) {
   try {
     console.log('AI Analyze POST request received')
     
-    // TEMPORARY: Skip authentication for testing
-    // TODO: Fix authentication later
-    const user = { id: 'test-user-id' }
+    // Create Supabase client
+    const supabase = createRouteHandlerClient({ cookies })
+    
+    // Get authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      console.log('Authentication failed:', authError)
+      return NextResponse.json({ 
+        error: 'UNAUTHORIZED',
+        message: 'Authentication required' 
+      }, { status: 401 })
+    }
     
     console.log('User authenticated:', user.id)
 

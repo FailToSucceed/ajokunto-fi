@@ -91,7 +91,7 @@ export default function CarProfile({ carId }: CarProfileProps) {
     setExportingPDF(true)
     try {
       const pdfBlob = await generateChecklistPDF(carId)
-      const filename = `ajokunto-raportti-${car.registration_number}-${new Date().toISOString().split('T')[0]}.html`
+      const filename = `ajokunto-raportti-${car.registration_number}-${new Date().toISOString().split('T')[0]}.pdf`
       downloadPDF(pdfBlob, filename)
     } catch (error) {
       console.error('Error exporting PDF:', error)
