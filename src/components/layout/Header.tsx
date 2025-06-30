@@ -14,9 +14,14 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut()
-      router.push('/')
+      // Force a brief delay to ensure auth state is cleared
+      setTimeout(() => {
+        router.push('/')
+      }, 100)
     } catch (error) {
       console.error('Error signing out:', error)
+      // Even if sign out fails, redirect to home
+      router.push('/')
     }
   }
 
