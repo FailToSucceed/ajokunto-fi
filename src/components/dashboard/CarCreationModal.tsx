@@ -125,10 +125,10 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Lisää uusi auto</h2>
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Lisää uusi auto</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
@@ -152,7 +152,7 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
                 value={formData.registration_number}
                 onChange={handleInputChange}
                 placeholder="ABC-123"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 required
                 disabled={loading}
               />
@@ -169,7 +169,7 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
                 value={formData.make}
                 onChange={handleInputChange}
                 placeholder="Toyota"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 disabled={loading}
               />
             </div>
@@ -185,7 +185,7 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
                 value={formData.model}
                 onChange={handleInputChange}
                 placeholder="Corolla"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 disabled={loading}
               />
             </div>
@@ -203,7 +203,7 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
                 placeholder="2020"
                 min="1900"
                 max="2030"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 disabled={loading}
               />
             </div>
@@ -221,7 +221,7 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
                 placeholder="120000"
                 min="0"
                 max="999999"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
                 disabled={loading}
               />
             </div>
