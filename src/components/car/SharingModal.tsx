@@ -40,21 +40,19 @@ export default function SharingModal({ carId, carRegistration, isOpen, onClose }
       const directShareUrl = `${window.location.origin}/car/${carId}/share`
       
       // Create a mock share link for display
-      const mockShareLink: ShareLink = {
+      const mockShareLink = {
         id: `direct-${Date.now()}`,
         car_id: carId,
         share_token: `direct-${carId}`,
-        permission_type: permissionType,
+        permission_type: permissionType as 'view' | 'edit',
         expires_at: null,
         created_by: 'current-user',
         created_at: new Date().toISOString(),
-        accessed_count: 0
+        accessed_count: 0,
+        shareUrl: directShareUrl
       }
       
-      // Add custom URL property for display
-      (mockShareLink as any).shareUrl = directShareUrl
-      
-      setShareLinks([mockShareLink, ...shareLinks])
+      setShareLinks([mockShareLink as ShareLink, ...shareLinks])
       console.log('Direct share link created:', directShareUrl)
     } catch (error) {
       console.error('Error in handleCreateShare:', error)

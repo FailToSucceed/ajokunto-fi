@@ -15,19 +15,62 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showEmailVerification, setShowEmailVerification] = useState(false)
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = []
+    if (password.length < 8) {
+      errors.push('Salasanan tulee olla vähintään 8 merkkiä pitkä')
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('Salasanassa tulee olla vähintään yksi pieni kirjain')
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Salasanassa tulee olla vähintään yksi iso kirjain')
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push('Salasanassa tulee olla vähintään yksi numero')
+    }
+    return errors
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setPasswordErrors([])
+
+    if (mode === 'signup') {
+      const passwordValidationErrors = validatePassword(password)
+      if (passwordValidationErrors.length > 0) {
+        setPasswordErrors(passwordValidationErrors)
+        setLoading(false)
+        return
+      }
+      
+      if (password !== confirmPassword) {
+        setError('Salasanat eivät täsmää')
+        setLoading(false)
+        return
+      }
+      
+      if (!firstName.trim() || !lastName.trim()) {
+        setError('Etunimi ja sukunimi ovat pakollisia')
+        setLoading(false)
+        return
+      }
+    }
 
     try {
       const { error } = mode === 'signin' 
         ? await signIn(email, password)
-        : await signUp(email, password)
+        : await signUp(email, password, firstName.trim(), lastName.trim())
 
       if (error) {
         setError(error.message)
@@ -98,9 +141,43 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
           </div>
         )}
         
+        {mode === 'signup' && (
+          <>
+            <div>
+              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                Etunimi *
+              </label>
+              <input
+                type="text"
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Etunimi"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                Sukunimi *
+              </label>
+              <input
+                type="text"
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Sukunimi"
+              />
+            </div>
+          </>
+        )}
+        
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Sähköposti
+            Sähköposti *
           </label>
           <input
             type="email"
@@ -115,7 +192,7 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
         
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Salasana
+            Salasana *
           </label>
           <input
             type="password"
@@ -123,11 +200,48 @@ export default function AuthForm({ mode, onSuccess }: AuthFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            minLength={6}
+            minLength={8}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Vähintään 6 merkkiä"
+            placeholder={mode === 'signup' ? "Vähintään 8 merkkiä" : "Salasana"}
           />
+          {mode === 'signup' && (
+            <div className="mt-2 text-sm text-gray-600">
+              <p className="font-medium mb-1">Vahva salasana sisältää:</p>
+              <ul className="list-disc list-inside space-y-1 text-xs">
+                <li>Vähintään 8 merkkiä</li>
+                <li>Vähintään yhden ison kirjaimen (A-Z)</li>
+                <li>Vähintään yhden pienen kirjaimen (a-z)</li>
+                <li>Vähintään yhden numeron (0-9)</li>
+              </ul>
+            </div>
+          )}
+          {passwordErrors.length > 0 && (
+            <div className="mt-2">
+              {passwordErrors.map((error, index) => (
+                <div key={index} className="text-sm text-red-600">
+                  {error}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+        
+        {mode === 'signup' && (
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              Vahvista salasana *
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Kirjoita salasana uudestaan"
+            />
+          </div>
+        )}
         
         <button
           type="submit"

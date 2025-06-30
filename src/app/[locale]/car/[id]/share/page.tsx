@@ -24,7 +24,7 @@ interface ChecklistItem {
 export default function CarSharePage() {
   const params = useParams()
   const router = useRouter()
-  const carId = params?.carId as string
+  const carId = params?.id as string
   
   const [loading, setLoading] = useState(true)
   const [car, setCar] = useState<Car | null>(null)

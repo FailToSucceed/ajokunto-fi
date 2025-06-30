@@ -1,11 +1,24 @@
 import { supabase } from './supabase'
 import { User } from '@supabase/supabase-js'
+import { createUserProfile } from './user-profiles'
 
-export async function signUp(email: string, password: string) {
+export async function signUp(email: string, password: string, firstName?: string, lastName?: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
   })
+  
+  if (data.user && !error && firstName && lastName) {
+    try {
+      await createUserProfile(data.user.id, {
+        first_name: firstName,
+        last_name: lastName
+      })
+    } catch (profileError) {
+      console.error('Failed to create user profile:', profileError)
+    }
+  }
+  
   return { data, error }
 }
 

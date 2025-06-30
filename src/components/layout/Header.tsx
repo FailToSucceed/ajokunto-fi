@@ -3,30 +3,22 @@
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import { getCurrentUser } from '@/lib/auth'
-import type { User } from '@supabase/supabase-js'
+import { useAuth } from '@/contexts/AuthContext'
+import { signOut } from '@/lib/auth'
 
 export default function Header() {
   const t = useTranslations()
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading } = useAuth()
 
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const currentUser = await getCurrentUser()
-        console.log('Header: Current user:', currentUser?.email || 'No user')
-        setUser(currentUser)
-      } catch (error) {
-        console.error('Error loading user:', error)
-      } finally {
-        setLoading(false)
-      }
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
     }
-    loadUser()
-  }, [])
+  }
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -78,6 +70,15 @@ export default function Header() {
                   </svg>
                   <span className="text-sm">Kojelauta</span>
                 </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center space-x-1 bg-red-50 hover:bg-red-100 text-red-600 font-medium px-2 sm:px-3 py-2 rounded-lg border border-red-200 transition-colors min-w-0 flex-shrink-0"
+                >
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span className="hidden sm:inline text-sm">Ulos</span>
+                </button>
               </div>
             ) : (
               <Link 

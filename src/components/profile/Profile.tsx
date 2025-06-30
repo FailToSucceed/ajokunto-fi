@@ -110,8 +110,20 @@ export default function Profile() {
       newErrors.currentPassword = 'Nykyinen salasana vaaditaan'
     }
 
-    if (passwordData.newPassword.length < 6) {
-      newErrors.newPassword = 'Uusi salasana on oltava vähintään 6 merkkiä'
+    if (passwordData.newPassword.length < 8) {
+      newErrors.newPassword = 'Uusi salasana on oltava vähintään 8 merkkiä'
+    }
+
+    if (!/[a-z]/.test(passwordData.newPassword)) {
+      newErrors.newPassword = 'Salasanassa tulee olla vähintään yksi pieni kirjain'
+    }
+
+    if (!/[A-Z]/.test(passwordData.newPassword)) {
+      newErrors.newPassword = 'Salasanassa tulee olla vähintään yksi iso kirjain'
+    }
+
+    if (!/[0-9]/.test(passwordData.newPassword)) {
+      newErrors.newPassword = 'Salasanassa tulee olla vähintään yksi numero'
     }
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {

@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { signOut, getCurrentUser } from '@/lib/auth'
-import { User } from '@supabase/supabase-js'
+import { useAuth } from '@/contexts/AuthContext'
 import CarCreationModal from './CarCreationModal'
 
 interface Car {
@@ -20,7 +19,7 @@ interface Car {
 export default function Dashboard() {
   const t = useTranslations()
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const { user, loading: authLoading } = useAuth()
   const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddCar, setShowAddCar] = useState(false)
@@ -43,15 +42,15 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    async function loadUserAndCars() {
+    async function loadCars() {
+      if (authLoading) return
+      
+      if (!user) {
+        router.push('/auth/signin')
+        return
+      }
+      
       try {
-        const currentUser = await getCurrentUser()
-        if (!currentUser) {
-          router.push('/auth/signin')
-          return
-        }
-        
-        setUser(currentUser)
         
         // Load cars with user permissions
         const { data: carData, error } = await supabase
@@ -60,7 +59,7 @@ export default function Dashboard() {
             *,
             car_permissions!inner(role)
           `)
-          .eq('car_permissions.user_id', currentUser.id)
+          .eq('car_permissions.user_id', user.id)
         
         if (error) {
           console.error('Error loading cars:', error)
@@ -78,21 +77,13 @@ export default function Dashboard() {
       }
     }
 
-    loadUserAndCars()
-  }, [router])
+    loadCars()
+  }, [user, authLoading, router])
 
   const handleAddCar = () => {
     setShowAddCar(true)
   }
 
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      router.push('/')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
-  }
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -235,21 +226,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 max-w-7xl py-8">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Kojelauta</h1>
-            <p className="text-gray-600 mt-1">Hallitse autojesi tietoja ja käytä Ajokunto.fi -palveluja</p>
-          </div>
-          
-          <button
-            onClick={handleSignOut}
-            className="flex items-center space-x-2 bg-red-50 hover:bg-red-100 text-red-600 font-medium py-2 px-4 rounded-lg border border-red-200 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Kirjaudu ulos</span>
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Kojelauta</h1>
+          <p className="text-gray-600 mt-1">Hallitse autojesi tietoja ja käytä Ajokunto.fi -palveluja</p>
         </div>
 
         {/* Dashboard Cards Grid */}

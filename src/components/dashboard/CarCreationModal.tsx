@@ -70,16 +70,18 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
           make: formData.make.trim() || null,
           model: formData.model.trim() || null,
           year: formData.year ? parseInt(formData.year) : null,
-          mileage: formData.mileage ? parseInt(formData.mileage) : null
+          mileage: formData.mileage ? parseInt(formData.mileage) : null,
+          created_by: userId
         })
         .select()
         .single()
 
       if (carError) {
+        console.error('Car creation error:', carError)
         if (carError.code === '23505') {
           setError('Auto tällä rekisterinumerolla on jo olemassa')
         } else {
-          setError('Auton luominen epäonnistui')
+          setError(`Auton luominen epäonnistui: ${carError.message}`)
         }
         return
       }
@@ -226,14 +228,14 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
 
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                Rooli autoon *
+                Rooli suhteessa autoon *
               </label>
               <select
                 id="role"
                 name="role"
                 value={formData.role}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 required
                 disabled={loading}
               >
