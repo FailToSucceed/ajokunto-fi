@@ -105,24 +105,8 @@ export default function Dashboard() {
   }
 
   const handleCarCreated = async (carId: string) => {
-    // Reload cars to include the new one
-    if (user) {
-      const { data: carData } = await supabase
-        .from('cars')
-        .select(`
-          *,
-          car_permissions!inner(role)
-        `)
-        .eq('car_permissions.user_id', user.id)
-      
-      if (carData) {
-        const carsWithRoles = carData.map(car => ({
-          ...car,
-          role: car.car_permissions[0].role
-        }))
-        setCars(carsWithRoles)
-      }
-    }
+    // Redirect to the new car's page
+    router.push(`/car/${carId}`)
   }
 
   if (loading) {

@@ -62,8 +62,20 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
         return
       }
 
+      // First check if car already exists
+      const { data: existingCar } = await supabase
+        .from('cars')
+        .select('id')
+        .eq('registration_number', formData.registration_number.trim())
+        .single()
+
+      if (existingCar) {
+        setError('Auto tällä rekisterinumerolla on jo olemassa')
+        return
+      }
+
       // Create the car
-      const { data: carData, error: carError } = await supabase
+      let { data: carData, error: carError } = await supabase
         .from('cars')
         .insert({
           registration_number: formData.registration_number.trim(),
@@ -76,32 +88,47 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
         .select()
         .single()
 
+      // If car creation fails, check if it was created anyway
       if (carError) {
         console.error('Car creation error:', carError)
-        if (carError.code === '23505') {
-          setError('Auto tällä rekisterinumerolla on jo olemassa')
+        
+        // Check if the car was actually created despite the error
+        const { data: createdCar } = await supabase
+          .from('cars')
+          .select('id')
+          .eq('registration_number', formData.registration_number.trim())
+          .single()
+
+        if (createdCar) {
+          // Car was created successfully, use it
+          console.log('Car was created despite RLS error, proceeding...')
+          carData = createdCar
         } else {
-          setError(`Auton luominen epäonnistui: ${carError.message}`)
+          // Car really wasn't created
+          if (carError.code === '23505') {
+            setError('Auto tällä rekisterinumerolla on jo olemassa')
+          } else {
+            setError(`Auton luominen epäonnistui: ${carError.message}`)
+          }
+          return
         }
-        return
       }
 
-      // Add user permission with selected role
-      const { error: permissionError } = await supabase
-        .from('car_permissions')
-        .insert({
-          car_id: carData.id,
-          user_id: userId,
-          role: formData.role
-        })
+      // Update role if it's not 'owner' (trigger creates owner automatically)
+      if (formData.role !== 'owner') {
+        const { error: updateError } = await supabase
+          .from('car_permissions')
+          .update({ role: formData.role })
+          .eq('car_id', carData.id)
+          .eq('user_id', userId)
 
-      if (permissionError) {
-        console.error('Error creating car permission:', permissionError)
-        setError('Auton luominen epäonnistui')
-        return
+        if (updateError) {
+          console.error('Error updating car permission role:', updateError)
+          // Don't fail here, just log the error as the car is created
+        }
       }
 
-      // Reset form and close modal
+      // Success! Reset form and redirect
       setFormData({
         registration_number: '',
         make: '',
@@ -110,6 +137,11 @@ export default function CarCreationModal({ isOpen, onClose, onCarCreated, userId
         mileage: '',
         role: 'owner'
       })
+      
+      // Brief success message before redirect
+      setError('') // Clear any errors
+      console.log('Car created successfully, redirecting...')
+      
       onCarCreated(carData.id)
       onClose()
 
